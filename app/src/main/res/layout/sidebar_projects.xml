@@ -1,0 +1,123 @@
+<!-- res/layout/popup_project.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/secondary_gradient_background">
+    
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:background="@color/header"
+        android:layout_height="44dp">
+    
+        <ImageView
+            android:id="@+id/backBtn"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:src="@drawable/back"
+            android:tint="@color/text_primary"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="Projects"
+            android:textColor="@color/text_primary"
+            android:layout_alignParentRight="true"
+            android:gravity="center"
+            android:layout_marginRight="10dp"/>
+
+    </RelativeLayout>
+
+        <!-- Search and New Button -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <LinearLayout
+            android:id="@+id/searchBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="10"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <!-- New Button -->
+            <EditText
+                android:id="@+id/searchEdt"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="7.2"
+                android:background="@drawable/edit_text_border"
+                android:drawableStart="@drawable/search_icon"
+                android:drawablePadding="8dp"
+                android:drawableTint="@color/text_primary"
+                android:hint="Search projects..."
+                android:padding="12dp"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_primary"
+                android:textSize="14sp" />
+
+            <LinearLayout
+                android:id="@+id/newProjectButton"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="8dp"
+                android:paddingStart="12dp"
+                android:layout_weight="2.8"
+                android:paddingEnd="12dp"
+                android:background="@drawable/secondary_button"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="ADD NEW"
+                    android:textSize="14sp"
+                    android:gravity="center"
+                    android:textColor="@color/white" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- RecyclerView -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/projectRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:clipToPadding="false"
+            android:paddingBottom="8dp" />
+
+        <LinearLayout
+            android:id="@+id/loader"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/loaderLogo"
+                android:layout_width="271dp"
+                android:layout_height="68dp"
+                android:src="@drawable/logo"
+                android:layout_centerInParent="true"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Loading Projects"
+                android:gravity="center"
+                android:layout_marginTop="10dp"
+                android:textSize="16dp"
+                android:layout_alignBottom="@+id/loaderLogo"></TextView>
+
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

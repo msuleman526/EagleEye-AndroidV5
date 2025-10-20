@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- DJI Remote Controller USB filter -->
+    <usb-device vendor-id="8888" product-id="4" />
+    <usb-device vendor-id="2304" product-id="514" />
+    <usb-device vendor-id="2304" product-id="513" />
+    <usb-device vendor-id="2304" product-id="515" />
+    <usb-device vendor-id="2304" product-id="516" />
+    <usb-device vendor-id="2304" product-id="517" />
+    <usb-device vendor-id="2304" product-id="518" />
+</resources>

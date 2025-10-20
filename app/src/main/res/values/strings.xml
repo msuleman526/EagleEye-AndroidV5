@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EagleEye</string>
+    <string name="connection_status">Connection Status</string>
+    <string name="telemetry_data">Telemetry Data</string>
+    <string name="mission_control">Mission Control</string>
+    <string name="instructions">Instructions</string>
+    
+    <!-- Connection Status -->
+    <string name="connected">Connected</string>
+    <string name="disconnected">Disconnected</string>
+    <string name="drone_model">Model: %s</string>
+    
+    <!-- Telemetry -->
+    <string name="flight_mode">Flight Mode: %s</string>
+    <string name="battery_percent">Battery: %d%%</string>
+    <string name="altitude_meters">Altitude: %dm</string>
+    <string name="gps_satellites">GPS Satellites: %d</string>
+    <string name="velocity_format">Velocity: H:%.1fm/s V:%.1fm/s</string>
+    <string name="unknown">Unknown</string>
+    
+    <!-- Mission Commands -->
+    <string name="upload">Upload</string>
+    <string name="start">Start</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Resume</string>
+    <string name="stop">Stop</string>
+    <string name="go_home">Go Home</string>
+    
+    <!-- Mission Status -->
+    <string name="mission_status">Mission: %s</string>
+    <string name="ready_to_execute">Ready to Execute</string>
+    <string name="executing">Executing</string>
+    <string name="paused">Paused</string>
+    
+    <!-- Instructions -->
+    <string name="instructions_text">1. Connect your DJI drone and remote controller\n2. Wait for connection status to show \'Connected\'\n3. Upload a demo mission using the Upload button\n4. Start the mission and monitor telemetry data\n5. Use Pause/Resume/Stop/Go Home as needed</string>
+    
+    <!-- Error Messages -->
+    <string name="permission_denied">Some permissions were denied. App may not function properly.</string>
+    <string name="service_not_available">Service not available</string>
+    <string name="demo_mission_loaded">Demo mission loaded</string>
+    <string name="demo_mission_failed">Demo mission failed to load</string>
+    
+    <!-- Command Responses -->
+    <string name="command_succeeded">%s succeeded</string>
+    <string name="command_failed">%s failed: %s</string>
+    <string name="mission_completed">Mission completed successfully</string>
+    <string name="mission_failed">Mission failed</string>
+</resources>

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/gradient_background">
+
+    <!-- Background image -->
+    <ImageView
+        android:id="@+id/background_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="20dp"
+        android:alpha="0.6"
+        android:scaleType="centerCrop"
+        android:src="@drawable/backgorund_image"
+        android:contentDescription="Background" />
+
+    <LinearLayout
+        android:layout_width="271dp"
+        android:orientation="vertical"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:layout_width="176dp"
+            android:layout_height="66dp"
+            android:layout_marginBottom="20dp"
+            android:src="@drawable/logo" />
+
+        <EditText
+            android:id="@+id/emailAddressEdt"
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:background="@drawable/edit_text_border"
+            android:drawableStart="@drawable/user_icon"
+            android:drawablePadding="8dp"
+            android:textColorHint="@color/gray_text"
+            android:drawableTint="@color/gray_text"
+            android:hint="Email Address"
+            android:inputType="textEmailAddress"
+            android:padding="12dp"
+            android:text="info@fayazk.com"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/passwordEdt"
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:layout_marginTop="10dp"
+            android:text="utb5XAQ8dmc*urb3gmz"
+            android:background="@drawable/edit_text_border"
+            android:drawableStart="@drawable/password_icon"
+            android:drawablePadding="8dp"
+            android:textColorHint="@color/gray_text"
+            android:drawableTint="@color/gray_text"
+            android:padding="12dp"
+            android:inputType="textPassword"
+            android:hint="Password"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:id="@+id/checkboxView"
+            android:layout_width="match_parent"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:layout_height="20dp">
+
+            <CheckBox
+                android:id="@+id/remmeberMeCheckbox"
+                android:layout_width="30dp"
+                android:layout_marginLeft="-5dp"
+                android:checked="true"
+                android:buttonTint="@color/main_color"
+                android:layout_height="20dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="Remember Me"
+                android:textColor="@color/text_primary"/>
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/loader"
+            android:layout_width="match_parent"
+            android:visibility="gone"
+            android:background="@drawable/primary_button"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:layout_height="37dp">
+
+            <ProgressBar
+                android:layout_width="35dp"
+                android:indeterminate="true"
+                android:indeterminateTint="@android:color/white"
+                android:layout_height="35dp"/>
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/loginButton"
+            android:visibility="visible"
+            android:layout_width="match_parent"
+            android:layout_height="37dp"
+            android:textColor="#FFFFFF"
+            android:text="Login"
+            android:textSize="15sp"
+            android:background="@drawable/primary_button"
+            android:layout_marginTop="10dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:text="Forgot Password?"
+            android:textColor="@color/text_primary"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:textSize="14dp"
+            android:text="Don’t have dronifyit account? Learn More"
+            android:textColor="@color/text_primary"/>
+
+
+    </LinearLayout>
+
+
+
+</RelativeLayout>
