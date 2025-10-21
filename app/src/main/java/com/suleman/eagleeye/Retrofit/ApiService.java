@@ -1,5 +1,6 @@
 package com.suleman.eagleeye.Retrofit;
 
+import com.suleman.eagleeye.ApiResponse.AddProjectResponse;
 import com.suleman.eagleeye.ApiResponse.LoginResponse;
 import com.suleman.eagleeye.ApiResponse.ProjectsResponse;
 
@@ -24,13 +25,13 @@ public interface ApiService {
     @POST("auth/login")
     Call<LoginResponse> login(@Field("email") String email, @Field("password") String password);
 
-//    @FormUrlEncoded
-//    @POST("projects")
-//    Call<AddProjectResponse> createProjectAddress(@Header("Authorization") String token, @Field("address") String address, @Field("latitude") String latitude, @Field("longitude") String longitude);
-//
-//    @FormUrlEncoded
-//    @PUT("projects/update/{projectId}")
-//    Call<AddProjectResponse> updateProjectAddress(@Header("Authorization") String token, @Path("projectId") String projectId, @Field("address") String address, @Field("latitude") String latitude, @Field("longitude") String longitude);
+    @FormUrlEncoded
+    @POST("projects")
+    Call<AddProjectResponse> createProjectInfo(@Header("Authorization") String token, @Field("address") String address, @Field("latitude") String latitude, @Field("longitude") String longitude, @Field("assign_to") int assign_to, @Field("name") String name);
+
+    @FormUrlEncoded
+    @PUT("projects/update/{projectId}")
+    Call<AddProjectResponse> updateProjectInfo(@Header("Authorization") String token, @Path("projectId") String projectId, @Field("address") String address, @Field("latitude") String latitude, @Field("longitude") String longitude, @Field("name") String name);
 //
 //    @FormUrlEncoded
 //    @PUT("projects/update/{projectId}")
@@ -44,14 +45,14 @@ public interface ApiService {
 //    @PUT("projects/update/{projectId}")
 //    Call<AddProjectResponse> updateHouseBoundary(@Header("Authorization") String token, @Path("projectId") String projectId, @Field("house_boundary") String houseBoundary);
 //
-//    @FormUrlEncoded
-//    @PUT("projects/update/{projectId}")
-//    Call<AddProjectResponse> updateWaypoints(@Header("Authorization") String token, @Path("projectId") String projectId, @Field("flight_setting") String flightSettings, @Field("flight_path") String flightPath, @Field("flight_path_type") String flight_path_type);
-//
-//    @FormUrlEncoded
-//    @PUT("projects/update/{projectId}")
-//    Call<AddProjectResponse> updateObstacles(@Header("Authorization") String token, @Path("projectId") String projectId, @Field("height_of_house") String height_of_house, @Field("highest_can") String highest_can, @Field("must_height") String must_height, @Field("obstacle_boundary") String obstacle_boundary);
-//
+    @FormUrlEncoded
+    @PUT("projects/update/{projectId}")
+    Call<AddProjectResponse> updateWaypoints(@Header("Authorization") String token, @Path("projectId") String projectId, @Field("flight_setting") String flightSettings, @Field("flight_path") String flightPath, @Field("flight_path_type") String flight_path_type, @Field("height_of_house") int height_of_house, @Field("highest_can") int highest_can, @Field("must_height") int must_height);
+
+    @FormUrlEncoded
+    @PUT("projects/update/{projectId}")
+    Call<AddProjectResponse> updateObstacles(@Header("Authorization") String token, @Path("projectId") String projectId, @Field("height_of_house") String height_of_house, @Field("highest_can") String highest_can, @Field("must_height") String must_height, @Field("obstacle_boundary") String obstacle_boundary);
+
 //    @FormUrlEncoded
 //    @POST("flight/started/{projectId}")
 //    Call<FlightLogResponse> saveFlightStartedLog(@Header("Authorization") String token, @Path("projectId") String projectId, @Field("date") String date, @Field("log") String log);

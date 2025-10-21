@@ -7,11 +7,12 @@ import java.io.Serializable;
  */
 public class WaypointAddress implements Serializable {
     
-    public double lat;
-    public double lng;
-    public WaypointAddress(double lat, double lng) {
-        this.lat = lat;
-        this.lng = lng;
+    public double latitude;
+    public double longitude;
+    public double altitude;
+
+    public WaypointAddress() {
+
     }
 
 }

@@ -1,0 +1,152 @@
+<!-- res/layout/popup_project.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/secondary_gradient_background">
+
+    <!-- Full Screen Google Maps -->
+
+    <!-- Info Panel on Right -->
+    <fragment
+        android:id="@+id/mapFragment"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <RelativeLayout
+        android:id="@+id/info"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:background="@drawable/secondary_gradient_background">
+
+        <RelativeLayout
+            android:id="@+id/header"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:background="@color/header">
+
+            <ImageView
+                android:id="@+id/backBtn"
+                android:layout_width="40dp"
+                android:layout_height="match_parent"
+                android:src="@drawable/back"
+                android:padding="10dp"
+                android:layout_centerVertical="true"
+                app:tint="@color/text_primary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Project Info"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:layout_alignParentRight="true"
+                android:gravity="center"
+                android:layout_marginRight="10dp" />
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_below="@id/header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="10dp"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp">
+
+            <!-- Address field -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="58dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="14dp"
+                    android:text="ADDRESS"
+                    android:textSize="12sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:weightSum="10">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/addressSearchField"
+                        android:layout_width="0dp"
+                        android:layout_weight="9"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:background="@drawable/edit_text_border"
+                        android:hint="i.e 23 Oakwood Blvd, CT, USA"
+                        android:inputType="text"
+                        android:minHeight="38dp"
+                        android:paddingLeft="10dp"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_primary"
+                        android:textSize="14sp" />
+
+                    <ImageButton
+                        android:id="@+id/currentLocationButton"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_marginLeft="5dp"
+                        android:layout_height="38dp"
+                        android:layout_alignParentBottom="true"
+                        android:layout_alignParentRight="true"
+                        android:layout_marginTop="5dp"
+                        android:background="@drawable/edit_text_border"
+                        android:src="@drawable/current_location"
+                        android:scaleType="centerInside"
+                        android:padding="8dp"
+                        app:tint="@color/text_primary"/>
+
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Project name field -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="58dp"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="14dp"
+                    android:text="PROJECT NAME"
+                    android:textSize="12sp"/>
+
+                <EditText
+                    android:id="@+id/projectNameEdt"
+                    android:layout_width="match_parent"
+                    android:layout_height="38dp"
+                    android:background="@drawable/edit_text_border"
+                    android:hint="i.e. John Smith - 3256"
+                    android:textSize="14sp"
+                    android:paddingLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_primary"
+                    android:inputType="text" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/continueBtn"
+            android:layout_width="108dp"
+            android:layout_height="36dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="20dp"
+            android:layout_marginBottom="10dp"
+            android:textColor="@color/white"
+            android:background="@drawable/primary_button"
+            android:text="CONTINUE"/>
+    </RelativeLayout>
+</LinearLayout>

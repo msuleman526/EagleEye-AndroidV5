@@ -10,6 +10,7 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +25,7 @@ import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.suleman.eagleeye.Activities.AddProject.ProjectInfoActivity;
 import com.suleman.eagleeye.Adapters.OnProjectClickListener;
 import com.suleman.eagleeye.Adapters.OnProjectEditClickListener;
 import com.suleman.eagleeye.Adapters.ProjectAdapter;
@@ -113,10 +115,9 @@ public class ProjectDialogFragment extends DialogFragment {
         view.findViewById(R.id.newProjectButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //startActivity(new Intent(getContext(), ProjectInfoActivity.class));
+                startActivity(new Intent(getContext(), ProjectInfoActivity.class));
             }
         });
-
         view.findViewById(R.id.backBtn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -129,7 +130,6 @@ public class ProjectDialogFragment extends DialogFragment {
             @Override
             public void onProjectClick(Project project) {
                 if (isUploadPhotosMode) {
-                    // Handle upload photos mode - check flights and show MediaManager
                     handleUploadPhotosProjectSelection(project);
                 } else if (projectSelectionListener != null) {
                     // Handle MediaManager project selection for submit functionality
@@ -142,16 +142,44 @@ public class ProjectDialogFragment extends DialogFragment {
         }, new OnProjectEditClickListener() {
             @Override
             public void onProjectEditClick(Project project) {
-                //Intent intent = new Intent(requireContext(), ProjectInfoActivity.class);
-//                intent.putExtra("project", project);
-//                startActivity(intent);
-//                // Dismiss the popup after selection
-//                dismiss();
+                Intent intent = new Intent(requireContext(), ProjectInfoActivity.class);
+                intent.putExtra("project", project);
+                startActivity(intent);
+                dismiss();
             }
         });
         recyclerView.setAdapter(adapter);
         loadProjectsFromApi();
         return view;
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        // Handle back button press
+        view.setFocusableInTouchMode(true);
+        view.requestFocus();
+        view.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP) {
+                    dismiss();
+                    return true;
+                }
+                return false;
+            }
+        });
+    }
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        // Reconfigure dialog when orientation changes
+        resizeDialog();
+
+        Log.d(TAG, "Orientation changed - reconfiguring dialog");
     }
 
     private void setupSearch() {
@@ -293,14 +321,11 @@ public class ProjectDialogFragment extends DialogFragment {
 
                 Log.d(TAG, "Dialog configured for LANDSCAPE - Width: 540dp, Height: MATCH_PARENT, Gravity: END");
             } else {
-                // Portrait mode: Full screen
                 WindowManager.LayoutParams params = window.getAttributes();
                 params.width = ViewGroup.LayoutParams.MATCH_PARENT;
                 params.height = ViewGroup.LayoutParams.MATCH_PARENT;
                 params.gravity = Gravity.CENTER; // Center for portrait
                 window.setAttributes(params);
-
-                Log.d(TAG, "Dialog configured for PORTRAIT - Width: MATCH_PARENT, Height: MATCH_PARENT");
             }
         }
     }

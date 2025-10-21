@@ -82,9 +82,20 @@
 
         <!-- Waypoint Activity -->
         <activity
+            android:name=".Activities.AddProject.ProjectInfoActivity"
+            android:exported="false"
+            android:theme="@style/Theme.EagleEyeAndroid" />
+
+        <!-- Waypoint Activity -->
+        <activity
             android:name=".Activities.LoginActivity"
             android:exported="false"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:theme="@style/Theme.EagleEyeAndroid" />
+
+        <activity
+            android:name=".Activities.AddProject.ProjectWaypointActivity"
+            android:exported="false"
             android:theme="@style/Theme.EagleEyeAndroid" />
 
         <activity

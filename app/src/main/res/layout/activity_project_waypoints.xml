@@ -1,0 +1,288 @@
+<!-- res/layout-land/activity_project_waypoints.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/secondary_gradient_background">
+
+    <!-- Full Screen Google Maps -->
+    <fragment
+        android:id="@+id/mapFragment"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- Info Panel on Right -->
+    <RelativeLayout
+        android:id="@+id/info"
+        android:layout_width="match_parent"
+        android:layout_height="440dp"
+        android:background="@drawable/secondary_gradient_background">
+
+        <RelativeLayout
+            android:id="@+id/header"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:background="@color/header">
+
+            <ImageView
+                android:id="@+id/backBtn"
+                android:layout_width="40dp"
+                android:layout_height="match_parent"
+                android:src="@drawable/back"
+                android:padding="10dp"
+                android:layout_centerVertical="true"
+                app:tint="@color/text_primary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Project Waypoints"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:layout_alignParentRight="true"
+                android:gravity="center"
+                android:layout_marginRight="10dp" />
+
+        </RelativeLayout>
+
+        <ScrollView
+            android:id="@+id/contentView"
+            android:layout_below="@id/header"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="50dp"
+            android:paddingTop="10dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp">
+
+            <!-- Single container for all child views -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- House Height Field -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="14dp"
+                        android:text="HOUSE HEIGHT"
+                        android:textSize="12sp"/>
+
+                    <EditText
+                        android:id="@+id/houseHeightEdit"
+                        android:layout_width="match_parent"
+                        android:layout_height="38dp"
+                        android:background="@drawable/edit_text_border"
+                        android:hint="30"
+                        android:textSize="14sp"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="10dp"
+                        android:layout_marginTop="5dp"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_primary"
+                        android:inputType="number"
+                        android:drawableTint="@color/text_primary"
+                        android:drawableEnd="@drawable/feet_icon"
+                        android:drawablePadding="6dp" />
+                </LinearLayout>
+
+                <!-- Number of Waypoints Field -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="14dp"
+                        android:text="NO OF WAYPOINTS"
+                        android:textSize="12sp"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="38dp"
+                        android:layout_marginTop="5dp"
+                        android:orientation="horizontal"
+                        android:weightSum="10">
+
+                        <ImageButton
+                            android:id="@+id/waypointMinusBtn"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:src="@drawable/minus"
+                            android:background="@drawable/transparent_button"
+                            app:tint="@color/text_primary" />
+
+                        <EditText
+                            android:id="@+id/noOfWaypointEdit"
+                            android:layout_width="0dp"
+                            android:layout_marginLeft="5dp"
+                            android:layout_marginRight="5dp"
+                            android:layout_weight="8"
+                            android:layout_height="38dp"
+                            android:background="@drawable/edit_text_border"
+                            android:hint="80"
+                            android:textSize="14sp"
+                            android:paddingLeft="10dp"
+                            android:paddingRight="10dp"
+                            android:textColor="@color/text_primary"
+                            android:textColorHint="@color/text_primary"
+                            android:inputType="number" />
+
+                        <ImageButton
+                            android:id="@+id/waypointPlusBtn"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:src="@drawable/plus"
+                            android:background="@drawable/transparent_button"
+                            app:tint="@color/text_primary" />
+
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Waypoint Radius Field -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="14dp"
+                        android:text="WAYPOINT RADIUS"
+                        android:textSize="12sp"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="38dp"
+                        android:layout_marginTop="5dp"
+                        android:orientation="horizontal"
+                        android:weightSum="10">
+
+                        <ImageButton
+                            android:id="@+id/radiusMinusBtn"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:src="@drawable/minus"
+                            android:background="@drawable/transparent_button"
+                            app:tint="@color/text_primary" />
+
+                        <EditText
+                            android:id="@+id/waypointRadiusEdt"
+                            android:layout_width="0dp"
+                            android:layout_marginLeft="5dp"
+                            android:layout_marginRight="5dp"
+                            android:layout_weight="8"
+                            android:layout_height="38dp"
+                            android:background="@drawable/edit_text_border"
+                            android:hint="90"
+                            android:textSize="14sp"
+                            android:paddingLeft="10dp"
+                            android:paddingRight="10dp"
+                            android:textColor="@color/text_primary"
+                            android:textColorHint="@color/text_primary"
+                            android:inputType="number" />
+
+                        <ImageButton
+                            android:id="@+id/radiusPlusBtn"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:src="@drawable/plus"
+                            android:background="@drawable/transparent_button"
+                            app:tint="@color/text_primary" />
+
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Max Obstacle Height Field -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="14dp"
+                        android:text="MAX OBSTACLE HEIGHT"
+                        android:textSize="12sp"/>
+
+                    <EditText
+                        android:id="@+id/maxObstacleHeight"
+                        android:layout_width="match_parent"
+                        android:layout_height="38dp"
+                        android:background="@drawable/edit_text_border"
+                        android:hint="90"
+                        android:textSize="14sp"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="10dp"
+                        android:layout_marginTop="5dp"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_primary"
+                        android:inputType="number"
+                        android:drawableTint="@color/text_primary"
+                        android:drawableEnd="@drawable/feet_icon"
+                        android:drawablePadding="6dp" />
+                </LinearLayout>
+
+                <!-- Allowed Airspace Height Field -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="14dp"
+                        android:text="ALLOW AIRSPACE HEIGHT"
+                        android:textSize="12sp"/>
+
+                    <EditText
+                        android:id="@+id/allowdAirSpaceHeightEdt"
+                        android:layout_width="match_parent"
+                        android:layout_height="38dp"
+                        android:layout_marginTop="5dp"
+                        android:background="@drawable/edit_text_border"
+                        android:drawableEnd="@drawable/feet_icon"
+                        android:drawablePadding="6dp"
+                        android:drawableTint="@color/text_primary"
+                        android:hint="200"
+                        android:inputType="number"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="10dp"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_primary"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </ScrollView>
+
+        <Button
+            android:id="@+id/continueBtn"
+            android:layout_width="108dp"
+            android:layout_height="36dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="10dp"
+            android:layout_marginBottom="10dp"
+            android:textColor="@color/white"
+            android:background="@drawable/primary_button"
+            android:text="START"/>
+    </RelativeLayout>
+</LinearLayout>
