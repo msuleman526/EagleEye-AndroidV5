@@ -16,11 +16,11 @@ public class MissionSetting implements Serializable {
     public WaylineFinishedAction finishAction = WaylineFinishedAction.GO_HOME;
     public WaylineExitOnRCLostBehavior exitOnRCLost = WaylineExitOnRCLostBehavior.EXCUTE_RC_LOST_ACTION;
     public WaylineExitOnRCLostAction executeRCLostAction = WaylineExitOnRCLostAction.GO_BACK;
-    public double takeOffSecurityHeight = 150d; //Feet Security Drone Height
+    public double takeOffSecurityHeight = 50d; //Feet Security Drone Height
     public double globalTransitionalSpeed = 10d;
     public double autoFlighSpeed = 8d;
     public double poiHeight = 4;
-    public double globalHeight = 80;
+    public double globalHeight = 40;
     public Location2D poiLocation = null;
     public HeightMode heightMode = HeightMode.RELATIVE;
 

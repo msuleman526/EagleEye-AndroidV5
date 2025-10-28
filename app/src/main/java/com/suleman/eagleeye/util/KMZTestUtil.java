@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.suleman.eagleeye.models.MissionGlobalModel;
+import com.suleman.eagleeye.models.MissionSetting;
 import com.suleman.eagleeye.util.wpml.WaypointInfoModel;
 import dji.sdk.wpmz.value.mission.ActionAircraftHoverParam;
 import dji.sdk.wpmz.value.mission.ActionGimbalRotateParam;
@@ -60,7 +61,7 @@ public class KMZTestUtil {
     public static final WaylineExitOnRCLostAction DEF_RC_LOST_ACTION =  WaylineExitOnRCLostAction.GO_BACK;
     public static final Double DEF_GLOBAL_TRANSITION_SPEED = 10d;
     public static final Double DEF_AUTO_FLIGHT_SPEED = 5d;
-    public static final Double DEF_GLOBAL_FLIGHT_HEIGHT = 100d;
+    public static final Double DEF_GLOBAL_FLIGHT_HEIGHT = 40d;
     public static final WaylineCoordinateMode DEF_COR_MODE = WaylineCoordinateMode.WGS84;
     public static final WaylinePositioningType DEF_POSITION_TYPE = WaylinePositioningType.GPS;
     public static final WaylineAltitudeMode DEF_ALTITUDE_MODE = WaylineAltitudeMode.RELATIVE_TO_START_POINT;
@@ -79,10 +80,12 @@ public class KMZTestUtil {
         return waylineMission;
     }
 
-    public static WaylineMissionConfig createMissionConfig(MissionGlobalModel missionGlobalModel){
+    public static WaylineMissionConfig createMissionConfig(MissionSetting missionSetting){
         WaylineMissionConfig config = new WaylineMissionConfig();
-        config.setFlyToWaylineMode(DEF_WAYLINE_MODE);
-        config.setFinishAction(DEF_FINISH_ACTION);
+        config.setFlyToWaylineMode(missionSetting.flyToWaylineMode);
+        config.setFinishAction(missionSetting.finishAction);
+
+        //Camera and Payload
         WaylineDroneInfo droneInfo = new WaylineDroneInfo();
         droneInfo.setDroneType(WaylineDroneType.UNKNOWN);  // Mini 4 Pro = UNKNOWN (65535)
         droneInfo.setDroneSubType(0);
@@ -94,11 +97,12 @@ public class KMZTestUtil {
         List<WaylinePayloadInfo> payloadInfoList = new ArrayList<>();
         payloadInfoList.add(payloadInfo);
         config.setPayloadInfo(payloadInfoList);
-        config.setSecurityTakeOffHeight(DEF_TAKE_OFF_HEIGHT);
+
+        config.setSecurityTakeOffHeight(missionSetting.takeOffSecurityHeight);
         config.setIsSecurityTakeOffHeightSet(true);
-        config.setExitOnRCLostBehavior(DEF_EXIT_RC_LOST_BEHAV);
-        config.setExitOnRCLostType(missionGlobalModel.getLostAction());
-        config.setGlobalTransitionalSpeed(DEF_GLOBAL_TRANSITION_SPEED);
+        config.setExitOnRCLostBehavior(missionSetting.exitOnRCLost);
+        config.setExitOnRCLostType(missionSetting.executeRCLostAction);
+        config.setGlobalTransitionalSpeed(missionSetting.globalTransitionalSpeed);
         return config;
     }
 
@@ -144,11 +148,11 @@ public class KMZTestUtil {
         waypointInfo.setActionGroups(transformActionsFrom(waypointInfoModels));
         waypointInfo.setGlobalFlightHeight(DEF_GLOBAL_FLIGHT_HEIGHT);
         waypointInfo.setIsGlobalFlightHeightSet(true);
-        waypointInfo.setGlobalTurnMode(WaylineWaypointTurnMode.TO_POINT_AND_STOP_WITH_DISCONTINUITY_CURVATURE);
-        waypointInfo.setUseStraightLine(true);
+        waypointInfo.setGlobalTurnMode(WaylineWaypointTurnMode.TO_POINT_AND_STOP_WITH_CONTINUITY_CURVATURE);
+        waypointInfo.setUseStraightLine(false);
         waypointInfo.setIsTemplateGlobalTurnModeSet(true);
         WaylineWaypointYawParam yawParam = new WaylineWaypointYawParam();
-        yawParam.setYawMode(WaylineWaypointYawMode.FOLLOW_WAYLINE);
+        yawParam.setYawMode(WaylineWaypointYawMode.TOWARD_POI);
         yawParam.setPoiLocation(poiLocation);
         waypointInfo.setGlobalYawParam(yawParam);
         waypointInfo.setIsTemplateGlobalYawParamSet(true);

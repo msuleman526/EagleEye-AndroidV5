@@ -12,5 +12,4 @@ public class WaypointSetting implements Serializable {
     public Double altitude = 10.0;
     public Double waypointSpeed = 5.0;
     public Double gimbalPitchAngle = 1.0;
-    public Integer gimbalPitch = 0;
 }

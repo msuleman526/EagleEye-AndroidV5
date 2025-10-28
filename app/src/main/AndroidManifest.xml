@@ -104,6 +104,12 @@
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:theme="@style/Theme.EagleEyeAndroid" />
 
+        <activity
+            android:name=".Activities.MediaManagerActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:theme="@style/Theme.EagleEyeAndroid" />
+
         <!-- Services -->
         <service
             android:name=".Services.CommandService_V5SDK"

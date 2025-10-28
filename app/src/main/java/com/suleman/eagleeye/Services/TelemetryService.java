@@ -38,6 +38,7 @@ import dji.v5.manager.SDKManager;
  * - Horizontal velocity (m/s)
  * - Vertical velocity (m/s)
  * - Location coordinates (latitude, longitude, altitude)
+ * - Aircraft heading/compass direction (0-360 degrees)
  * 
  * Architecture:
  * - Singleton pattern for app-wide usage
@@ -80,6 +81,7 @@ public class TelemetryService {
     private volatile Double currentHorizontalVelocity = 0.0;
     private volatile Double currentVerticalVelocity = 0.0;
     private volatile LocationCoordinate3D currentLocation = null;
+    private volatile Double currentHeading = 0.0;
     
     // Static telemetry interfaces (equivalent to iOS callbacks)
     public interface FlightModeChangedListener {
@@ -117,6 +119,10 @@ public class TelemetryService {
     public interface LocationChangedListener {
         void onLocationChanged(LocationCoordinate3D location);
     }
+
+    public interface HeadingChangedListener {
+        void onHeadingChanged(Double heading);
+    }
     
     // Listener instances
     private FlightModeChangedListener flightModeChangedListener;
@@ -128,6 +134,7 @@ public class TelemetryService {
     private HorizontalVelocityChangedListener horizontalVelocityChangedListener;
     private VerticalVelocityChangedListener verticalVelocityChangedListener;
     private LocationChangedListener locationChangedListener;
+    private HeadingChangedListener headingChangedListener;
     
     /**
      * Private constructor for singleton pattern
@@ -244,7 +251,10 @@ public class TelemetryService {
             
             // Location Listener
             setupLocationListener();
-            
+
+            // Heading Listener
+            setupHeadingListener();
+
             Log.d(TAG, "All telemetry listeners setup completed");
             
         } catch (Exception e) {
@@ -480,29 +490,59 @@ public class TelemetryService {
         try {
             DJIKey<LocationCoordinate3D> locationKey = KeyTools.createKey(
                 FlightControllerKey.KeyAircraftLocation3D, ComponentIndexType.LEFT_OR_MAIN);
-                
-            KeyManager.getInstance().listen(locationKey, this, 
+
+            KeyManager.getInstance().listen(locationKey, this,
                 new CommonCallbacks.KeyListener<LocationCoordinate3D>() {
                     @Override
                     public void onValueChange(LocationCoordinate3D oldValue, LocationCoordinate3D newValue) {
                         currentLocation = newValue;
-                        
+
                         if (newValue != null) {
-                            Log.v(TAG, "Location changed: Lat=" + String.format("%.6f", newValue.getLatitude()) + 
-                                      ", Lon=" + String.format("%.6f", newValue.getLongitude()) + 
+                            Log.v(TAG, "Location changed: Lat=" + String.format("%.6f", newValue.getLatitude()) +
+                                      ", Lon=" + String.format("%.6f", newValue.getLongitude()) +
                                       ", Alt=" + String.format("%.1f", newValue.getAltitude()) + "m");
                         }
-                        
+
                         if (locationChangedListener != null) {
                             uiHandler.post(() -> locationChangedListener.onLocationChanged(newValue));
                         }
                     }
                 });
-                
+
             Log.d(TAG, "Location listener setup completed");
-            
+
         } catch (Exception e) {
             Log.e(TAG, "Error setting up location listener: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Setup Heading listener
+     */
+    private void setupHeadingListener() {
+        try {
+            DJIKey<Double> headingKey = KeyTools.createKey(
+                FlightControllerKey.KeyCompassHeading, ComponentIndexType.LEFT_OR_MAIN);
+
+            KeyManager.getInstance().listen(headingKey, this,
+                new CommonCallbacks.KeyListener<Double>() {
+                    @Override
+                    public void onValueChange(Double oldValue, Double newValue) {
+                        Double heading = newValue != null ? newValue : 0.0;
+                        currentHeading = heading;
+
+                        Log.v(TAG, "Heading changed: " + String.format("%.1f", heading) + "°");
+
+                        if (headingChangedListener != null) {
+                            uiHandler.post(() -> headingChangedListener.onHeadingChanged(heading));
+                        }
+                    }
+                });
+
+            Log.d(TAG, "Heading listener setup completed");
+
+        } catch (Exception e) {
+            Log.e(TAG, "Error setting up heading listener: " + e.getMessage(), e);
         }
     }
     
@@ -528,7 +568,8 @@ public class TelemetryService {
                 requestCurrentAltitude();
                 requestCurrentVelocity();
                 requestCurrentLocation();
-                
+                requestCurrentHeading();
+
                 Log.d(TAG, "Initial telemetry update requests sent");
             } catch (Exception e) {
                 Log.e(TAG, "Error during initial telemetry update: " + e.getMessage(), e);
@@ -718,7 +759,7 @@ public class TelemetryService {
                         uiHandler.post(() -> locationChangedListener.onLocationChanged(location));
                     }
                 }
-                
+
                 @Override
                 public void onFailure(IDJIError error) {
                     Log.d(TAG, "Failed to get current location: " + error.description());
@@ -726,6 +767,29 @@ public class TelemetryService {
             });
         } catch (Exception e) {
             Log.e(TAG, "Error requesting current location: " + e.getMessage());
+        }
+    }
+
+    private void requestCurrentHeading() {
+        try {
+            DJIKey<Double> key = KeyTools.createKey(FlightControllerKey.KeyCompassHeading, ComponentIndexType.LEFT_OR_MAIN);
+            KeyManager.getInstance().getValue(key, new CommonCallbacks.CompletionCallbackWithParam<Double>() {
+                @Override
+                public void onSuccess(Double heading) {
+                    Double head = heading != null ? heading : 0.0;
+                    currentHeading = head;
+                    if (headingChangedListener != null) {
+                        uiHandler.post(() -> headingChangedListener.onHeadingChanged(head));
+                    }
+                }
+
+                @Override
+                public void onFailure(IDJIError error) {
+                    Log.d(TAG, "Failed to get current heading: " + error.description());
+                }
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "Error requesting current heading: " + e.getMessage());
         }
     }
     
@@ -765,6 +829,10 @@ public class TelemetryService {
     public void setLocationChangedListener(LocationChangedListener listener) {
         this.locationChangedListener = listener;
     }
+
+    public void setHeadingChangedListener(HeadingChangedListener listener) {
+        this.headingChangedListener = listener;
+    }
     
     // Getter methods for current values (for immediate access)
     public String getCurrentFlightMode() {
@@ -801,6 +869,10 @@ public class TelemetryService {
     
     public LocationCoordinate3D getCurrentLocation() {
         return currentLocation;
+    }
+
+    public Double getCurrentHeading() {
+        return currentHeading;
     }
     
     /**
@@ -841,6 +913,7 @@ public class TelemetryService {
             horizontalVelocityChangedListener = null;
             verticalVelocityChangedListener = null;
             locationChangedListener = null;
+            headingChangedListener = null;
             
             // Reset state
             isInitialized.set(false);

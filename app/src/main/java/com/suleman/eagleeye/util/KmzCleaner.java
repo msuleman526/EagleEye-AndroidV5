@@ -267,29 +267,29 @@ public class KmzCleaner {
                 continue; // Skip this line
             }
 
-            if (currentLine.contains("<wpml:waypointHeadingAngle>")) {
-                removedCount++;
-                Log.d(TAG, "Removing gimbalPitchMode line: " + currentLine.trim());
-                continue;
-            }
-
-            if (currentLine.contains("<wpml:waypointHeadingAngleEnable>")) {
-                removedCount++;
-                Log.d(TAG, "Removing gimbalPitchMode line: " + currentLine.trim());
-                continue;
-            }
-
-            if (currentLine.contains("<wpml:waypointHeadingPoiIndex>")) {
-                removedCount++;
-                Log.d(TAG, "Removing gimbalPitchMode line: " + currentLine.trim());
-                continue;
-            }
-
-            if (currentLine.contains("<wpml:waypointPoiPoint>")) {
-                removedCount++;
-                Log.d(TAG, "Removing gimbalPitchMode line: " + currentLine.trim());
-                continue;
-            }
+//            if (currentLine.contains("<wpml:waypointGimbalHeadingParam>")) {
+//                removedCount++;
+//                Log.d(TAG, "Removing gimbalPitchMode line: " + currentLine.trim());
+//                continue;
+//            }
+//
+//            if (currentLine.contains("<wpml:waypointGimbalPitchAngle>")) {
+//                removedCount++;
+//                Log.d(TAG, "Removing gimbalPitchMode line: " + currentLine.trim());
+//                continue;
+//            }
+//
+//            if (currentLine.contains("<wpml:waypointGimbalYawAngle>")) {
+//                removedCount++;
+//                Log.d(TAG, "Removing gimbalPitchMode line: " + currentLine.trim());
+//                continue;
+//            }
+//
+//            if (currentLine.contains("<wpml:waypointPoiPoint>")) {
+//                removedCount++;
+//                Log.d(TAG, "Removing gimbalPitchMode line: " + currentLine.trim());
+//                continue;
+//            }
 
             // Fix namespace version
             if (currentLine.contains("xmlns:wpml=\"http://www.dji.com/wpmz/1.0.6\"")) {

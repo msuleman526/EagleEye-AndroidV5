@@ -31,6 +31,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.dji.wpmzsdk.common.utils.kml.model.Location2D;
@@ -49,8 +50,10 @@ import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+import com.suleman.eagleeye.Fragments.CameraFeedFragment;
 import com.suleman.eagleeye.R;
 import com.suleman.eagleeye.Services.CommandService_V5SDK;
+import com.suleman.eagleeye.Services.ConnectionStateManager;
 import com.suleman.eagleeye.Services.TelemetryService;
 import com.suleman.eagleeye.models.Flight;
 import com.suleman.eagleeye.models.FlightAddress;
@@ -62,6 +65,8 @@ import com.suleman.eagleeye.util.Helper;
 import com.suleman.eagleeye.util.OtherHelper;
 import com.suleman.eagleeye.util.PermissionHelper;
 import com.suleman.eagleeye.util.SessionUtils;
+import com.suleman.eagleeye.util.SpeedDisplayManager;
+import com.suleman.eagleeye.util.TelemetryDisplayManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,6 +85,7 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
     // UI Components
     private GoogleMap googleMap;
     private TextView statusTextView;
+    private ImageView connectionBar;
     private ArrayList<Marker> points;
     private Marker pointOfInterest;
     private Button startMissionButton;
@@ -98,10 +104,14 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
     private LatLng homeLocation;
     private Marker homeMarker;
     private Marker droneMarker;
+    private Double currentDroneHeading = 0.0;
     private boolean missionInProgress = false;
     private boolean missionPaused = false;
     private Handler uiHandler;
     MissionSetting missionSetting;
+    private CameraFeedFragment cameraFeedFragment;
+    private TelemetryDisplayManager telemetryDisplayManager;
+    private SpeedDisplayManager speedDisplayManager;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,11 +121,89 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
         currentProject = (Project) getIntent().getSerializableExtra("project");
         waypointsList = new ArrayList<>();
         points = new ArrayList<>();
+        uiHandler = new Handler(Looper.getMainLooper());
         initializeUI();
         initializeServices();
+        initializeDisplayManagers();
         initializeMap();
         checkPermissions();
-        uiHandler = new Handler(Looper.getMainLooper());
+        initCameraFeedFragment();
+
+        ConnectionStateManager.getInstance().getConnectionState().observe(this, isConnected -> {
+            Log.d(TAG, "🔗 Connection state changed: " + isConnected);
+            if(isConnected){
+                connectionBar.setImageDrawable(getDrawable(R.drawable.connected_bar));
+            }else{
+                connectionBar.setImageDrawable(getDrawable(R.drawable.disconnected_bar));
+            }
+        });
+    }
+
+    private void initializeDisplayManagers() {
+        try {
+            Log.d(TAG, "Initializing display managers...");
+
+            // Create display managers
+            telemetryDisplayManager = new TelemetryDisplayManager(this, "WaypointActivity");
+            speedDisplayManager = new SpeedDisplayManager(this);
+
+            // Initialize TelemetryDisplayManager UI components from telemetry_view.xml
+            TextView flightModeText = findViewById(R.id.flightModeText);
+            TextView satelliteCountText = findViewById(R.id.satelliteCountText);
+            TextView batteryText = findViewById(R.id.batteryText);
+            TextView remoteSignalText = findViewById(R.id.remoteSignalText);
+            ImageView droneIcon = findViewById(R.id.droneIcon);
+            ImageView satelliteIcon = findViewById(R.id.satelliteIcon);
+            ImageView gpsSignalIcon = findViewById(R.id.gpsSignalIcon);
+            ImageView batteryIcon = findViewById(R.id.batteryIcon);
+            ImageView remoteIcon = findViewById(R.id.remoteIcon);
+            ImageView remoteSignalIcon = findViewById(R.id.remoteSignalIcon);
+
+            telemetryDisplayManager.initializeComponents(
+                flightModeText, satelliteCountText, batteryText, remoteSignalText,
+                droneIcon, satelliteIcon, gpsSignalIcon, batteryIcon, remoteIcon, remoteSignalIcon
+            );
+
+            // Initialize SpeedDisplayManager UI components from speed_view.xml
+            TextView distanceTxt = findViewById(R.id.distanceTxt);
+            TextView altitudeTxt = findViewById(R.id.altitudeTxt);
+            TextView horizontalSpeedTxt = findViewById(R.id.horizontalSpeedTxt);
+            TextView verticalSpeedTxt = findViewById(R.id.verticalSpeedTxt);
+
+            speedDisplayManager.initializeComponents(
+                distanceTxt, altitudeTxt, horizontalSpeedTxt, verticalSpeedTxt
+            );
+
+            // Setup telemetry services for both managers
+            if (telemetryService != null) {
+                telemetryDisplayManager.setupTelemetryServices(telemetryService);
+                speedDisplayManager.setupTelemetryServices(telemetryService);
+
+                // Set home location for distance calculation if available
+                if (homeLocation != null) {
+                    speedDisplayManager.setHomeLocation(homeLocation.latitude, homeLocation.longitude);
+                }
+            }
+
+            Log.d(TAG, "Display managers initialized successfully");
+
+        } catch (Exception e) {
+            Log.e(TAG, "Error initializing display managers: " + e.getMessage(), e);
+        }
+    }
+
+    private void initCameraFeedFragment() {
+        // Check if fragment already exists
+        cameraFeedFragment = (CameraFeedFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.cameraFeedContainer);
+        if (cameraFeedFragment == null) {
+            cameraFeedFragment = new CameraFeedFragment();
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            transaction.replace(R.id.cameraFeedContainer, cameraFeedFragment);
+            transaction.commit();
+        } else {
+            Log.d(TAG, "✅ Camera fragment already exists - reusing");
+        }
     }
 
     void showMessage(String message){
@@ -129,7 +217,7 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
             public void run() {
                 runOnUiThread(() -> statusTextView.setVisibility(View.GONE));
             }
-        }, 3000);
+        }, 5000);
     }
 
     private void setUpCurrentProject(){
@@ -137,7 +225,6 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
             missionSetting = new MissionSetting();
             missionSetting.poiLocation = new Location2D(Double.parseDouble(currentProject.latitude), Double.parseDouble(currentProject.longitude));
 
-            ArrayList<WaypointSetting> waypointSettingArrayList = new ArrayList<>();
             double maxHeight = currentProject.must_height;
             List<Obstacle> obstacles = currentProject.getObstacles();
             for (Obstacle obstacle : obstacles) {
@@ -237,34 +324,21 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
                 Location poiLocation = new Location("poi");
                 poiLocation.setLatitude(poiPosition.latitude);
                 poiLocation.setLongitude(poiPosition.longitude);
-                double angle = OtherHelper.getAngleBetweenPoints(currentMarkerLocation, poiLocation);
-                waypointSetting.gimbalPitchAngle = angle;
+                float gimbalPitch = OtherHelper.calculatePitchAngle(new LocationCoordinate2D(lat, lng), new LocationCoordinate2D(pointOfInterest.getPosition().latitude, pointOfInterest.getPosition().longitude),
+                        height * 0.3048,
+                        missionSetting.poiHeight);
+                if (gimbalPitch > 90) {
+                    gimbalPitch = 90;
+                } else if (gimbalPitch < -90) {
+                    gimbalPitch = -90;
+                }
+                waypointSetting.gimbalPitchAngle = (double) gimbalPitch;
             } else {
                 waypointSetting.gimbalPitchAngle = 0.0;
             }
-            if (waypointsList.isEmpty()) {
-                waypointSetting.gimbalPitch = 0;
-            } else {
-                // Check the last waypoint's gimbal pitch
-                WaypointSetting lastWaypoint = waypointsList.get(waypointsList.size() - 1);
-                if (lastWaypoint.gimbalPitch == 0) {
-                    waypointSetting.gimbalPitch = -90;
-                } else {
-                    waypointSetting.gimbalPitch = 0;
-                }
-            }
-            if (project != null && project.id != 0 && height != 0) {
-                waypointSetting.altitude = height * 0.3048;
-                float pitch = OtherHelper.calculatePitchAngle(new LocationCoordinate2D(lat, lng), new LocationCoordinate2D(pointOfInterest.getPosition().latitude, pointOfInterest.getPosition().longitude),height * 0.3048,  missionSetting.poiHeight);
-            } else {
-                waypointSetting.altitude = 30.0;
-            }
-            if (points.size() > 0) {
-                Marker lastMarker = points.get(points.size() - 1);
-                if (lastMarker != null) {
-                    String newSnippet = "Waypoint #" + points.size() + " - Altitude: " + String.format("%.1fm", waypointSetting.altitude);
-                }
-            }
+
+            waypointSetting.altitude = height * 0.3048;
+            Log.d("Waypoint Angle", "" + waypointSetting.gimbalPitchAngle);
             waypointsList.add(waypointSetting);
             SessionUtils.saveWaypoints(waypointsList);
             updateWaypointPolyline();
@@ -347,6 +421,13 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
         startMissionButton = findViewById(R.id.startMissionButton);
         stopMissionButton = findViewById(R.id.stopMissionButton);
         pauseResumeButton = findViewById(R.id.pauseMissionButton);
+        connectionBar = findViewById(R.id.connectionBar);
+        findViewById(R.id.backBtn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                finish();
+            }
+        });
         
         // Initially disable mission control buttons
         stopMissionButton.setEnabled(false);
@@ -369,7 +450,7 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
             }
             
             if (commandService != null) {
-                commandService.startWaypointMission();
+                commandService.startWaypointMission(missionSetting, waypointsList);
                 startMissionButton.setEnabled(false);
                 startMissionButton.setVisibility(View.GONE);
                 stopMissionButton.setEnabled(true);
@@ -576,6 +657,12 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
                 .snippet("Launch/Landing Point")
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
         homeMarker = googleMap.addMarker(homeMarkerOptions);
+
+        // Update SpeedDisplayManager with home location for distance calculation
+        if (speedDisplayManager != null) {
+            speedDisplayManager.setHomeLocation(homeLocation.latitude, homeLocation.longitude);
+        }
+
         Log.d(TAG, "Home location marker added to map.");
     }
     
@@ -583,7 +670,7 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
      * Setup real-time drone location listener
      */
     private void setupDroneLocationListener() {
-        // Since TelemetryService is a singleton class (not Android Service), 
+        // Since TelemetryService is a singleton class (not Android Service),
         // we'll use it directly to get location updates
         if (telemetryService != null) {
             telemetryService.setLocationChangedListener(new TelemetryService.LocationChangedListener() {
@@ -592,9 +679,18 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
                     uiHandler.post(() -> updateDroneLocationOnMap(location));
                 }
             });
+
+            // Setup heading listener for drone marker rotation
+            telemetryService.setHeadingChangedListener(new TelemetryService.HeadingChangedListener() {
+                @Override
+                public void onHeadingChanged(Double heading) {
+                    currentDroneHeading = heading;
+                    uiHandler.post(() -> updateDroneMarkerRotation(heading));
+                }
+            });
         }
-        
-        Log.d(TAG, "Drone location listener setup complete");
+
+        Log.d(TAG, "Drone location and heading listeners setup complete");
     }
     
     /**
@@ -602,27 +698,41 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
      */
     private void updateDroneLocationOnMap(LocationCoordinate3D location) {
         if (googleMap == null || location == null) return;
-        
+
         LatLng dronePosition = new LatLng(location.getLatitude(), location.getLongitude());
-        
-        // Remove existing drone marker
-        if (droneMarker != null) {
-            droneMarker.remove();
+
+        // Update existing marker or create new one
+        if (droneMarker == null) {
+            // Create new drone marker
+            MarkerOptions droneMarkerOptions = new MarkerOptions()
+                    .position(dronePosition)
+                    .title("Drone Location")
+                    .snippet("Alt: " + String.format("%.1f", location.getAltitude()) + "m")
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.drone_new))
+                    .anchor(0.5f, 0.5f) // Set anchor to center for proper rotation
+                    .flat(true) // Make marker flat so it rotates with the map
+                    .rotation(currentDroneHeading.floatValue()); // Set initial rotation
+
+            droneMarker = googleMap.addMarker(droneMarkerOptions);
+        } else {
+            // Update existing marker position and snippet
+            droneMarker.setPosition(dronePosition);
+            droneMarker.setSnippet("Alt: " + String.format("%.1f", location.getAltitude()) + "m");
+            droneMarker.setRotation(currentDroneHeading.floatValue());
         }
-        
-        // Add/update drone marker
-        MarkerOptions droneMarkerOptions = new MarkerOptions()
-                .position(dronePosition)
-                .title("Drone Location")
-                .snippet("Alt: " + String.format("%.1f", location.getAltitude()) + "m")
-                .icon(BitmapDescriptorFactory.fromResource(R.drawable.drone_new)); // Use drone_new.xml
-        
-        droneMarker = googleMap.addMarker(droneMarkerOptions);
-        
-        // Optionally move camera to follow drone during mission
-        if (missionInProgress) {
-            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(dronePosition, 18));
-        }
+
+//        // Optionally move camera to follow drone during mission
+//        if (missionInProgress) {
+//            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(dronePosition, 18));
+//        }
+    }
+
+    /**
+     * Update drone marker rotation based on heading
+     */
+    private void updateDroneMarkerRotation(Double heading) {
+        if (googleMap == null || droneMarker == null || heading == null) return;
+        droneMarker.setRotation(heading.floatValue());
     }
 
     private void updateStatus(String status) {
@@ -678,21 +788,30 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        
+
         // Unbind services
         if (isCommandServiceBound) {
             unbindService(commandServiceConnection);
             isCommandServiceBound = false;
         }
-        
+
         // Cleanup TelemetryService (singleton)
         if (telemetryService != null) {
             telemetryService.setLocationChangedListener(null);
+            telemetryService.setHeadingChangedListener(null);
         }
-        
+
+        // Cleanup display managers
+        if (telemetryDisplayManager != null) {
+            telemetryDisplayManager.cleanup();
+        }
+        if (speedDisplayManager != null) {
+            speedDisplayManager.cleanup();
+        }
+
         // Unregister broadcast receiver
         LocalBroadcastManager.getInstance(this).unregisterReceiver(waypointStatusReceiver);
-        
+
         Log.d(TAG, "WaypointActivity destroyed");
     }
 }
