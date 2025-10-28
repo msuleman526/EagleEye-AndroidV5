@@ -36,12 +36,16 @@ import com.suleman.eagleeye.ApiResponse.AddProjectResponse;
 import com.suleman.eagleeye.R;
 import com.suleman.eagleeye.Retrofit.ApiClient;
 import com.suleman.eagleeye.Retrofit.ApiService;
+import com.suleman.eagleeye.models.FlightAddress;
+import com.suleman.eagleeye.models.FlightSetting;
 import com.suleman.eagleeye.models.Project;
 import com.suleman.eagleeye.models.WaypointAddress;
 import com.suleman.eagleeye.models.WaypointSetting;
 import com.suleman.eagleeye.util.ActivityCollector;
 import com.suleman.eagleeye.util.MapHelper;
 import com.suleman.eagleeye.util.UserSessionManager;
+
+import org.json.JSONObject;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -113,8 +117,8 @@ public class ProjectWaypointActivity extends AppCompatActivity implements OnMapR
 
     // Project Data
     private Project project;
-    private List<WaypointAddress> waypointList = new ArrayList<>();
-    private WaypointSetting waypointSetting;
+    private List<FlightAddress> waypointList = new ArrayList<>();
+    private FlightSetting waypointSetting;
 
     // API
     private ApiService apiService;
@@ -471,51 +475,47 @@ public class ProjectWaypointActivity extends AppCompatActivity implements OnMapR
 
             // Load waypoints from project
             waypointList = project.getWaypointList();
-
             // Load flight settings (stored in feet)
             if (project.flight_setting != null) {
                 String flightSettingStr = project.getFlightSettingAsString();
                 if (flightSettingStr != null && !flightSettingStr.isEmpty() && !flightSettingStr.equals("null")) {
                     try {
-                        Gson gson = new Gson();
-                        waypointSetting = gson.fromJson(flightSettingStr, WaypointSetting.class);
+                        JSONObject flightSettings = new JSONObject(flightSettingStr);
+                        if (flightSettings.has("circleRadius")) {
+                            waypointRadiusEdt.setText(String.valueOf(flightSettings.getInt("circleRadius")));
+                        }
 
-                        if (waypointSetting != null) {
-                            // Populate UI with existing data (already in feet)
-                            if (waypointSetting.altitude != null) {
-                                houseHeightEdit.setText(String.valueOf(waypointSetting.altitude.intValue()));
-                            }
-                            if (waypointSetting.cornerRadiusInMeters != null) {
-                                waypointRadiusEdt.setText(String.valueOf(waypointSetting.cornerRadiusInMeters));
-                            }
+                        if (flightSettings.has("noOfWaypoints")) {
+                            noOfWaypointEdit.setText(String.valueOf(flightSettings.getInt("noOfWaypoints")));
                         }
                     } catch (Exception e) {
                         Log.e(TAG, "Error parsing flight settings: " + e.getMessage());
                     }
                 }
+            }else{
+                noOfWaypointEdit.setText(String.valueOf(WAYPOINT_COUNT_DEFAULT));
+                waypointRadiusEdt.setText(String.valueOf(WAYPOINT_RADIUS_DEFAULT));
             }
 
             // Load obstacle data (already in feet)
             if (project.height_of_house > 0) {
                 houseHeightEdit.setText(String.valueOf(project.height_of_house));
-            }
-            if (project.highest_can > 0) {
-                maxObstacleHeight.setText(String.valueOf(project.must_height));
+            }else{
+                houseHeightEdit.setText(String.valueOf(HOUSE_HEIGHT_DEFAULT));
             }
             if (project.must_height > 0) {
-                allowdAirSpaceHeightEdt.setText(String.valueOf(project.highest_can));
+                maxObstacleHeight.setText(String.valueOf(project.must_height));
+            }else{
+                maxObstacleHeight.setText(String.valueOf(MAX_OBSTACLE_HEIGHT_DEFAULT));
             }
-
+            if (project.highest_can > 0) {
+                allowdAirSpaceHeightEdt.setText(String.valueOf(project.highest_can));
+            }else{
+                allowdAirSpaceHeightEdt.setText(String.valueOf(ALLOWED_AIRSPACE_DEFAULT));
+            }
             // Set waypoint count
             if (!waypointList.isEmpty()) {
                 noOfWaypointEdit.setText(String.valueOf(waypointList.size()));
-            } else {
-                // Set default values
-                noOfWaypointEdit.setText(String.valueOf(WAYPOINT_COUNT_DEFAULT));
-                waypointRadiusEdt.setText(String.valueOf(WAYPOINT_RADIUS_DEFAULT));
-                houseHeightEdit.setText(String.valueOf(HOUSE_HEIGHT_DEFAULT));
-                maxObstacleHeight.setText(String.valueOf(MAX_OBSTACLE_HEIGHT_DEFAULT));
-                allowdAirSpaceHeightEdt.setText(String.valueOf(ALLOWED_AIRSPACE_DEFAULT));
             }
         } catch (Exception e) {
             Log.e(TAG, "Error loading project data: " + e.getMessage());
@@ -546,10 +546,7 @@ public class ProjectWaypointActivity extends AppCompatActivity implements OnMapR
                 int houseHeightFeet = getHouseHeight();
 
                 for (LatLng waypoint : generatedWaypoints) {
-                    WaypointAddress waypointAddress = new WaypointAddress();
-                    waypointAddress.latitude = waypoint.latitude;
-                    waypointAddress.longitude = waypoint.longitude;
-                    waypointAddress.altitude = (double) houseHeightFeet; // Store in feet
+                    FlightAddress waypointAddress = new FlightAddress(waypoint.latitude, waypoint.longitude);
                     waypointList.add(waypointAddress);
                 }
             }
@@ -662,20 +659,15 @@ public class ProjectWaypointActivity extends AppCompatActivity implements OnMapR
 
             // Create or update waypoint settings (store in feet)
             if (waypointSetting == null) {
-                waypointSetting = new WaypointSetting();
+                waypointSetting = new FlightSetting();
             }
 
-            waypointSetting.altitude = (double) houseHeightFeet;
-            waypointSetting.cornerRadiusInMeters = waypointRadiusFeet; // Actually stores feet
+            waypointSetting.noOfWaypoints = waypointCount;
+            waypointSetting.circleRadius = waypointRadiusFeet; // Actually stores feet
 
             // Ensure waypoints are generated
             if (waypointList.isEmpty()) {
                 generateWaypoints(waypointCount, waypointRadiusFeet);
-            }
-
-            // Update altitude for all waypoints
-            for (WaypointAddress waypoint : waypointList) {
-                waypoint.altitude = (double) houseHeightFeet;
             }
 
             // Show loading

@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.suleman.eagleeye.Activities.AddProject.ProjectInfoActivity;
+import com.suleman.eagleeye.Activities.WaypointActivity;
 import com.suleman.eagleeye.Adapters.OnProjectClickListener;
 import com.suleman.eagleeye.Adapters.OnProjectEditClickListener;
 import com.suleman.eagleeye.Adapters.ProjectAdapter;
@@ -382,18 +383,11 @@ public class ProjectDialogFragment extends DialogFragment {
      * Handle project selection for mission planner (original behavior)
      */
     private void handleMissionPlannerProjectSelection(Project project) {
-//        Context context = getContext();
-//        if (context instanceof MissionPlanner) {
-//            MissionPlanner missionPlanner = (MissionPlanner) context;
-//            missionPlanner.onProjectSelectedFromList(project);
-//            Log.d(TAG, "Mission Planner - Project selected: " + project.name);
-//        } else {
-//            Log.e(TAG, "Context is not MissionPlanner, starting new activity");
-//            Intent intent = new Intent(requireContext(), MissionPlanner.class);
-//            intent.putExtra("project", project);
-//            startActivity(intent);
-//        }
-//        dismiss();
+        Log.e(TAG, "Context is not MissionPlanner, starting new activity");
+        Intent intent = new Intent(requireContext(), WaypointActivity.class);
+        intent.putExtra("project", project);
+        startActivity(intent);
+        dismiss();
     }
 
     /**

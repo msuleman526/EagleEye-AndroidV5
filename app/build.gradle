@@ -131,7 +131,8 @@ dependencies {
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation 'com.github.bumptech.glide:glide:4.16.0'
     implementation 'com.github.mukeshsolanki:Google-Places-AutoComplete-EditText:0.0.8'
-    
+    implementation 'com.github.trinnguyen:Android-SegmentView:master-SNAPSHOT'
+
     // Testing Dependencies
     testImplementation deps.junit4
     androidTestImplementation deps.junitExt

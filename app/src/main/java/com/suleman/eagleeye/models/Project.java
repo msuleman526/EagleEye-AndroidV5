@@ -108,8 +108,8 @@ public class Project implements Serializable {
         return obstacles;
     }
 
-    public List<WaypointAddress> getWaypointList() {
-        List<WaypointAddress> waypoints = new ArrayList<>();
+    public List<FlightAddress> getWaypointList() {
+        List<FlightAddress> waypoints = new ArrayList<>();
 
         try {
             if (flight_path == null || flight_path.trim().isEmpty() || flight_path.equals("null")) {
@@ -131,7 +131,7 @@ public class Project implements Serializable {
 
             Gson gson = new Gson();
             if (pathStr.startsWith("[") && pathStr.endsWith("]")) {
-                Type listType = new TypeToken<List<WaypointAddress>>(){}.getType();
+                Type listType = new TypeToken<List<FlightAddress>>(){}.getType();
                 waypoints = gson.fromJson(pathStr, listType);
                 if (waypoints == null) {
                     waypoints = new ArrayList<>();

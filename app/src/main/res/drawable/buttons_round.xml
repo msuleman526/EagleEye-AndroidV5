@@ -9,5 +9,5 @@
         android:gradientRadius="50%"
         android:startColor="@color/secondary_background1"
         android:endColor="@color/secondary_background2" />
-    <corners android:radius="20dp" />
+    <corners android:radius="50dp" />
 </shape>

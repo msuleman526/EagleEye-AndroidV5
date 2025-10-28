@@ -2,9 +2,18 @@ package com.suleman.eagleeye.util;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.provider.DocumentsContract;
 import android.util.Log;
+
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.suleman.eagleeye.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -89,6 +98,8 @@ public class Helper {
             Log.e(TAG, "startBrowser failed: " + e.getMessage());
         }
     }
+
+
 
     /**
      * Open file chooser for specified path

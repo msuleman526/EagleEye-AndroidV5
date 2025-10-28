@@ -82,7 +82,7 @@ public class KMZTestUtil {
     public static WaylineMissionConfig createMissionConfig(MissionGlobalModel missionGlobalModel){
         WaylineMissionConfig config = new WaylineMissionConfig();
         config.setFlyToWaylineMode(DEF_WAYLINE_MODE);
-        config.setFinishAction(missionGlobalModel.getFinishAction());
+        config.setFinishAction(DEF_FINISH_ACTION);
         WaylineDroneInfo droneInfo = new WaylineDroneInfo();
         droneInfo.setDroneType(WaylineDroneType.UNKNOWN);  // Mini 4 Pro = UNKNOWN (65535)
         droneInfo.setDroneSubType(0);

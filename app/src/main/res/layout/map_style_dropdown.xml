@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    app:cardElevation="8dp"
+    app:cardCornerRadius="12dp"
+    android:background="@color/transparent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:background="@drawable/secondary_gradient_background"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Map Style"
+            android:textColor="@color/main_color"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:paddingBottom="8dp" />
+    
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/white"
+            android:alpha="0.3"
+            android:layout_marginBottom="8dp" />
+    
+        <TextView
+            android:id="@+id/style_satellite_streets"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:text="🛰️ Satellite Streets"
+            android:textColor="@color/text_primary"
+            android:textSize="12sp"
+            android:gravity="center_vertical"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true" />
+    
+        <TextView
+            android:id="@+id/style_satellite"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:text="🌍 Pure Satellite"
+            android:textColor="@color/text_primary"
+            android:textSize="12sp"
+            android:gravity="center_vertical"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true" />
+    
+        <TextView
+            android:id="@+id/style_streets"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:text="🗺️ Street Map"
+            android:textColor="@color/text_primary"
+            android:textSize="12sp"
+            android:gravity="center_vertical"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true" />
+    
+        <TextView
+            android:id="@+id/style_outdoors"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:text="🏔️ Outdoors"
+            android:textColor="@color/text_primary"
+            android:textSize="12sp"
+            android:gravity="center_vertical"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true" />
+    
+        <TextView
+            android:id="@+id/style_dark"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:text="🌙 Dark Theme"
+            android:textColor="@color/text_primary"
+            android:textSize="12sp"
+            android:gravity="center_vertical"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true" />
+    
+        <TextView
+            android:id="@+id/style_light"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:text="☀️ Light Theme"
+            android:textColor="@color/text_primary"
+            android:textSize="12sp"
+            android:gravity="center_vertical"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true" />
+    
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

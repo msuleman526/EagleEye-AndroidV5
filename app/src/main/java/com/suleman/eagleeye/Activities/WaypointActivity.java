@@ -8,13 +8,22 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,24 +33,40 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.dji.wpmzsdk.common.utils.kml.model.Location2D;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import com.suleman.eagleeye.R;
 import com.suleman.eagleeye.Services.CommandService_V5SDK;
 import com.suleman.eagleeye.Services.TelemetryService;
+import com.suleman.eagleeye.models.Flight;
+import com.suleman.eagleeye.models.FlightAddress;
+import com.suleman.eagleeye.models.MissionSetting;
+import com.suleman.eagleeye.models.Obstacle;
+import com.suleman.eagleeye.models.Project;
+import com.suleman.eagleeye.models.WaypointSetting;
+import com.suleman.eagleeye.util.Helper;
+import com.suleman.eagleeye.util.OtherHelper;
 import com.suleman.eagleeye.util.PermissionHelper;
+import com.suleman.eagleeye.util.SessionUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import dji.sdk.keyvalue.value.common.LocationCoordinate2D;
 import dji.sdk.keyvalue.value.common.LocationCoordinate3D;
 
 /**
@@ -55,52 +80,263 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
     // UI Components
     private GoogleMap googleMap;
     private TextView statusTextView;
+    private ArrayList<Marker> points;
+    private Marker pointOfInterest;
     private Button startMissionButton;
-    private Button stopMissionButton;
-    private Button pauseResumeButton;
-    
+    private ImageView stopMissionButton;
+    private ImageView pauseResumeButton;
+    private ArrayList<WaypointSetting> waypointsList;
+    private Polyline waypointPolyline;
     // Services
     private CommandService_V5SDK commandService;
     private TelemetryService telemetryService;
     private boolean isCommandServiceBound = false;
+    private Project currentProject;
     
     // Location
     private FusedLocationProviderClient fusedLocationClient;
     private LatLng homeLocation;
     private Marker homeMarker;
     private Marker droneMarker;
-    
-    // Waypoints from CommandService
-    private static final double[][] WAYPOINTS = {
-        {33.695843675830965, 73.05188642388882},
-        {33.695748383286784, 73.05199694013237},
-        {33.69557785952293, 73.0520411466298},
-        {33.69544411515762, 73.05189245204755},
-        {33.695460833214675, 73.05175782316904},
-        {33.69553773623518, 73.051635250608},
-        {33.69563804441939, 73.05154683761317},
-        {33.6957433678868, 73.05157697840686},
-        {33.69587711178632, 73.05167945710544}
-    };
-    
-    // Mission state
     private boolean missionInProgress = false;
     private boolean missionPaused = false;
     private Handler uiHandler;
+    MissionSetting missionSetting;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_waypoint);
-        
-        Log.d(TAG, "WaypointActivity created");
-        
+
+        currentProject = (Project) getIntent().getSerializableExtra("project");
+        waypointsList = new ArrayList<>();
+        points = new ArrayList<>();
         initializeUI();
         initializeServices();
         initializeMap();
         checkPermissions();
-        
         uiHandler = new Handler(Looper.getMainLooper());
+    }
+
+    void showMessage(String message){
+        runOnUiThread(() -> {
+            statusTextView.setVisibility(View.VISIBLE);
+            statusTextView.setText(message);
+        });
+
+        statusTextView.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                runOnUiThread(() -> statusTextView.setVisibility(View.GONE));
+            }
+        }, 3000);
+    }
+
+    private void setUpCurrentProject(){
+        if(currentProject != null){
+            missionSetting = new MissionSetting();
+            missionSetting.poiLocation = new Location2D(Double.parseDouble(currentProject.latitude), Double.parseDouble(currentProject.longitude));
+
+            ArrayList<WaypointSetting> waypointSettingArrayList = new ArrayList<>();
+            double maxHeight = currentProject.must_height;
+            List<Obstacle> obstacles = currentProject.getObstacles();
+            for (Obstacle obstacle : obstacles) {
+                if (obstacle.height > maxHeight) {
+                    maxHeight = obstacle.height;
+                }
+            }
+            if (currentProject.is_grid) {
+                showMessage("This Flight path is not currently implemented.");
+                return;
+            }
+
+            double projLat = Double.parseDouble(currentProject.latitude);
+            double projLng = Double.parseDouble(currentProject.longitude);
+            LatLng homePosition = new LatLng(projLat, projLng);
+            MarkerOptions markerOptions = new MarkerOptions()
+                    .position(homePosition)
+                    .title("Home - " + currentProject.name)
+                    .snippet("Project Location")
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.home_marker));
+
+            pointOfInterest = googleMap.addMarker(markerOptions);
+
+            if (pointOfInterest != null) {
+                pointOfInterest.setVisible(true);
+                googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(homePosition, 20f));
+                uiHandler.postDelayed(() -> {
+                    try {
+                        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(homePosition, 20f));
+                    } catch (Exception e) {}
+                }, 500);
+            } else {
+                showMessage("Failed to create home marker on map");
+            }
+
+            // 4. Process non-grid flight
+            double subjectPhotoHeight = currentProject.height_of_house + 45;
+            List<FlightAddress> flightPath = currentProject.getWaypointList();
+            double maxObstacleHeight = maxHeight + 10;
+
+            if (!flightPath.isEmpty()) {
+                double[] heights = {150, subjectPhotoHeight,
+                        maxObstacleHeight};
+                for (int i = 0; i < heights.length; i++) {
+                    double height = heights[i];
+                    drawWaypoint(Double.parseDouble(currentProject.latitude), Double.parseDouble(currentProject.longitude), currentProject, height);
+                }
+
+                // 4. Process remaining waypoints with maxObstacleHeight
+                for (int i = 1; i < flightPath.size(); i++) {
+                    FlightAddress waypoint = flightPath.get(i);
+                    drawWaypoint(waypoint.lat, waypoint.lng,
+                            currentProject, maxObstacleHeight);
+                }
+            }
+        }
+    }
+
+    public void drawWaypoint(double lat, double lng, Project project, double height) {
+        try {
+            // Step 1: Create a new waypoint
+            WaypointSetting waypointSetting = new WaypointSetting();
+            String waypointName = "Waypoint " + (points.size() + 1);
+            waypointSetting.name = waypointName;
+            if (googleMap != null) {
+                LatLng position = new LatLng(lat, lng);
+                int markerNumber = points.size() + 1;
+                BitmapDescriptor waypointIcon = createWaypointMarker(markerNumber);
+
+                MarkerOptions markerOptions = new MarkerOptions()
+                        .position(position)
+                        .title(waypointName)
+                        .snippet("Waypoint #" + markerNumber + " - Altitude: "+ height + "f")
+                        .icon(waypointIcon)
+                        .anchor(0.5f, 0.5f);
+
+                Marker marker = googleMap.addMarker(markerOptions);
+
+                if (marker != null) {
+                    marker.setVisible(true);
+                    points.add(marker);
+                } else {
+                    showMessage("Failed to create waypoint marker");
+                    return;
+                }
+            } else {
+                showMessage("Map not ready - cannot add waypoint");
+                return;
+            }
+            // Step 3: Set coordinates
+            waypointSetting.latitude = lat;
+            waypointSetting.longitude = lng;
+            if (pointOfInterest != null) {Location currentMarkerLocation = new Location("waypoint");
+                currentMarkerLocation.setLatitude(lat);
+                currentMarkerLocation.setLongitude(lng);
+                LatLng poiPosition = pointOfInterest.getPosition();
+                Location poiLocation = new Location("poi");
+                poiLocation.setLatitude(poiPosition.latitude);
+                poiLocation.setLongitude(poiPosition.longitude);
+                double angle = OtherHelper.getAngleBetweenPoints(currentMarkerLocation, poiLocation);
+                waypointSetting.gimbalPitchAngle = angle;
+            } else {
+                waypointSetting.gimbalPitchAngle = 0.0;
+            }
+            if (waypointsList.isEmpty()) {
+                waypointSetting.gimbalPitch = 0;
+            } else {
+                // Check the last waypoint's gimbal pitch
+                WaypointSetting lastWaypoint = waypointsList.get(waypointsList.size() - 1);
+                if (lastWaypoint.gimbalPitch == 0) {
+                    waypointSetting.gimbalPitch = -90;
+                } else {
+                    waypointSetting.gimbalPitch = 0;
+                }
+            }
+            if (project != null && project.id != 0 && height != 0) {
+                waypointSetting.altitude = height * 0.3048;
+                float pitch = OtherHelper.calculatePitchAngle(new LocationCoordinate2D(lat, lng), new LocationCoordinate2D(pointOfInterest.getPosition().latitude, pointOfInterest.getPosition().longitude),height * 0.3048,  missionSetting.poiHeight);
+            } else {
+                waypointSetting.altitude = 30.0;
+            }
+            if (points.size() > 0) {
+                Marker lastMarker = points.get(points.size() - 1);
+                if (lastMarker != null) {
+                    String newSnippet = "Waypoint #" + points.size() + " - Altitude: " + String.format("%.1fm", waypointSetting.altitude);
+                }
+            }
+            waypointsList.add(waypointSetting);
+            SessionUtils.saveWaypoints(waypointsList);
+            updateWaypointPolyline();
+        } catch (Exception e) {
+            showMessage("Error creating waypoint: " + e.getMessage());
+        }
+    }
+
+    private void updateWaypointPolyline() {
+        try {
+            if (googleMap == null) {
+                return;
+            }
+            if (waypointPolyline != null) {
+                waypointPolyline.remove();
+                waypointPolyline = null;
+            }
+            if (!waypointsList.isEmpty()) {
+                PolylineOptions polylineOptions = new PolylineOptions()
+                        .color(getResources().getColor(android.R.color.holo_blue_bright))
+                        .width(8f)
+                        .geodesic(true);
+                for (WaypointSetting waypoint : waypointsList) {
+                    if (waypoint.latitude != null && waypoint.longitude != null) {
+                        polylineOptions.add(new LatLng(waypoint.latitude, waypoint.longitude));
+                    }
+                }
+                if (polylineOptions.getPoints().size() >= 2) {
+                    waypointPolyline = googleMap.addPolyline(polylineOptions);
+                }
+            }
+        } catch (Exception e) {
+            // Error updating waypoint polyline
+        }
+    }
+
+    BitmapDescriptor createWaypointMarker(int waypointNumber) {
+        try {
+            // Use the same map_marker resource as FlightWaypointsActivity
+            Bitmap originalBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.map_marker);
+
+            if (originalBitmap == null) {
+                return BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
+            }
+
+            // Create mutable copy to draw on
+            Bitmap mutableBitmap = originalBitmap.copy(Bitmap.Config.ARGB_8888, true);
+            Canvas canvas = new Canvas(mutableBitmap);
+
+            // Set up paint for the number text (same as FlightWaypointsActivity)
+            Paint textPaint = new Paint();
+            textPaint.setColor(Color.WHITE);
+            textPaint.setTextSize(35);
+            textPaint.setTypeface(Typeface.DEFAULT_BOLD);
+            textPaint.setAntiAlias(true);
+            textPaint.setTextAlign(Paint.Align.CENTER);
+
+            // Draw the number on the marker
+            String numberText = String.valueOf(waypointNumber);
+            Rect textBounds = new Rect();
+            textPaint.getTextBounds(numberText, 0, numberText.length(), textBounds);
+
+            // Position text in center of marker (same calculation as FlightWaypointsActivity)
+            float x = mutableBitmap.getWidth() / 2.0f;
+            float y = (mutableBitmap.getHeight() / 3.0f) - textBounds.exactCenterY();
+            canvas.drawText(numberText, x, y, textPaint);
+            return BitmapDescriptorFactory.fromBitmap(mutableBitmap);
+
+        } catch (Exception e) {
+            // Fallback to default green marker if creation fails
+            return BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
+        }
     }
     
     /**
@@ -110,7 +346,7 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
         statusTextView = findViewById(R.id.statusTextView);
         startMissionButton = findViewById(R.id.startMissionButton);
         stopMissionButton = findViewById(R.id.stopMissionButton);
-        pauseResumeButton = findViewById(R.id.pauseResumeButton);
+        pauseResumeButton = findViewById(R.id.pauseMissionButton);
         
         // Initially disable mission control buttons
         stopMissionButton.setEnabled(false);
@@ -135,9 +371,12 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
             if (commandService != null) {
                 commandService.startWaypointMission();
                 startMissionButton.setEnabled(false);
+                startMissionButton.setVisibility(View.GONE);
                 stopMissionButton.setEnabled(true);
+                stopMissionButton.setVisibility(View.VISIBLE);
                 pauseResumeButton.setEnabled(true);
-                pauseResumeButton.setText("Pause");
+                pauseResumeButton.setVisibility(View.VISIBLE);
+                stopMissionButton.setVisibility(View.GONE);
                 missionPaused = false;
             } else {
                 Toast.makeText(this, "Command service not available", Toast.LENGTH_SHORT).show();
@@ -155,11 +394,17 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
             if (commandService != null) {
                 if (missionPaused) {
                     commandService.resumeMission();
-                    pauseResumeButton.setText("Pause");
+                    pauseResumeButton.setImageDrawable(getDrawable(R.drawable.pause));
+                    pauseResumeButton.setVisibility(View.VISIBLE);
+                    stopMissionButton.setVisibility(View.VISIBLE);
+                    stopMissionButton.setVisibility(View.GONE);
                     missionPaused = false;
                 } else {
                     commandService.pauseMission();
-                    pauseResumeButton.setText("Resume");
+                    pauseResumeButton.setImageDrawable(getDrawable(R.drawable.resume));
+                    pauseResumeButton.setVisibility(View.VISIBLE);
+                    stopMissionButton.setVisibility(View.VISIBLE);
+                    stopMissionButton.setVisibility(View.GONE);
                     missionPaused = true;
                 }
             }
@@ -184,9 +429,11 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
      */
     private void resetMissionButtons() {
         startMissionButton.setEnabled(true);
+        startMissionButton.setVisibility(View.VISIBLE);
         stopMissionButton.setEnabled(false);
+        stopMissionButton.setVisibility(View.GONE);
         pauseResumeButton.setEnabled(false);
-        pauseResumeButton.setText("Pause");
+        pauseResumeButton.setVisibility(View.GONE);
         missionInProgress = false;
         missionPaused = false;
     }
@@ -303,75 +550,33 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
     public void onMapReady(@NonNull GoogleMap map) {
         googleMap = map;
         Log.d(TAG, "Google Map ready");
-        
-        // Configure map
+        googleMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
         googleMap.getUiSettings().setZoomControlsEnabled(true);
         googleMap.getUiSettings().setCompassEnabled(true);
         googleMap.getUiSettings().setMyLocationButtonEnabled(false);
-        
-        // Add waypoint markers
-        addWaypointMarkers();
-        
-        // Add home location if available
+
         if (homeLocation != null) {
             updateMapWithHomeLocation();
         }
-        
-        // Setup drone location listener
+
+        setUpCurrentProject();
+
         setupDroneLocationListener();
-        
-        // Focus on waypoints area
-        focusOnWaypoints();
     }
-    
-    /**
-     * Add waypoint markers to the map
-     */
-    private void addWaypointMarkers() {
-        if (googleMap == null) return;
-        
-        PolylineOptions polylineOptions = new PolylineOptions()
-                .color(ContextCompat.getColor(this, android.R.color.holo_blue_light))
-                .width(5);
-        
-        for (int i = 0; i < WAYPOINTS.length; i++) {
-            LatLng waypoint = new LatLng(WAYPOINTS[i][0], WAYPOINTS[i][1]);
-            
-            MarkerOptions markerOptions = new MarkerOptions()
-                    .position(waypoint)
-                    .title("Waypoint " + (i + 1))
-                    .snippet("Lat: " + WAYPOINTS[i][0] + ", Lng: " + WAYPOINTS[i][1])
-                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
-            
-            googleMap.addMarker(markerOptions);
-            polylineOptions.add(waypoint);
-        }
-        
-        // Add polyline connecting waypoints
-        googleMap.addPolyline(polylineOptions);
-        Log.d(TAG, "Added " + WAYPOINTS.length + " waypoint markers to map");
-    }
-    
-    /**
-     * Update map with home location marker
-     */
     private void updateMapWithHomeLocation() {
         if (googleMap == null || homeLocation == null) return;
-        
         // Remove existing home marker
         if (homeMarker != null) {
             homeMarker.remove();
         }
-        
         // Add home marker
         MarkerOptions homeMarkerOptions = new MarkerOptions()
                 .position(homeLocation)
                 .title("Home Location")
                 .snippet("Launch/Landing Point")
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-        
         homeMarker = googleMap.addMarker(homeMarkerOptions);
-        Log.d(TAG, "Home location marker added to map");
+        Log.d(TAG, "Home location marker added to map.");
     }
     
     /**
@@ -419,37 +624,9 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
             googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(dronePosition, 18));
         }
     }
-    
-    /**
-     * Focus camera on waypoints area
-     */
-    private void focusOnWaypoints() {
-        if (googleMap == null) return;
-        
-        // Calculate center of waypoints
-        double centerLat = 0;
-        double centerLng = 0;
-        
-        for (double[] waypoint : WAYPOINTS) {
-            centerLat += waypoint[0];
-            centerLng += waypoint[1];
-        }
-        
-        centerLat /= WAYPOINTS.length;
-        centerLng /= WAYPOINTS.length;
-        
-        LatLng center = new LatLng(centerLat, centerLng);
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(center, 16));
-        Log.d(TAG, "Camera focused on waypoints area");
-    }
-    
-    /**
-     * Update status display
-     */
+
     private void updateStatus(String status) {
-        runOnUiThread(() -> {
-            statusTextView.setText(status);
-        });
+        showMessage(status);
     }
     
     // Service connection for CommandService

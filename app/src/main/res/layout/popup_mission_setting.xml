@@ -1,0 +1,296 @@
+<!-- res/layout/popup_project.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="250dp"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="@drawable/secondary_gradient_curve">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Mission Setting"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:textSize="16dp"
+        android:textColor="@color/text_primary"/>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="10dp"
+        android:padding="5dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/maxFlightSpeedLbl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:text="Flight Speed: 15.0m/s"/>
+
+            <SeekBar
+                android:id="@+id/maxFlightSlider"
+                android:layout_marginTop="3dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="15"
+                android:progress="15"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/autoFlightSpeedLbl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:text="Auto Flight Speed: 5.0m/s"/>
+
+            <SeekBar
+                android:id="@+id/autoFlightSlider"
+                android:layout_marginTop="3dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="14"
+                android:progress="4"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/repeatTimesLbl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:text="Repeat Time: 0"/>
+
+            <SeekBar
+                android:id="@+id/repeatTimeSlider"
+                android:layout_marginTop="3dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="1"
+                android:progress="0"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/poiHeightLbl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:text="POI Height: 4.0m"/>
+
+            <SeekBar
+                android:id="@+id/poiHeightSlider"
+                android:layout_marginTop="3dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="99"
+                android:progress="3"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:text="Rotate Gimbal Pitch"/>
+
+            <com.trinnguyen.SegmentView
+                android:id="@+id/gimbalSegmentation"
+                android:layout_width="match_parent"
+                android:layout_height="35dp"
+                app:separateLineColor="#D6D6D9"
+                app:unselectedTextColor="@color/white"
+                app:selectedTextColor="@color/white"
+                app:unselectedBackgroundColor="#B3C8C7C7"
+                app:selectedBackgroundColor="@color/main_color"
+                app:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                app:numSegments="2"
+                app:selectedIndex="1"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:text="Exit on RC Connection Lost"/>
+
+            <com.trinnguyen.SegmentView
+                android:id="@+id/exitSegmentation"
+                android:layout_width="match_parent"
+                android:layout_height="35dp"
+                app:separateLineColor="#D6D6D9"
+                app:unselectedTextColor="@color/white"
+                app:selectedTextColor="@color/white"
+                app:unselectedBackgroundColor="#B3C8C7C7"
+                app:selectedBackgroundColor="@color/main_color"
+                app:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                app:numSegments="2"
+                app:selectedIndex="1"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:text="Go to First Waypoint"/>
+
+            <com.trinnguyen.SegmentView
+                android:id="@+id/firstWaypointSegment"
+                android:layout_width="match_parent"
+                android:layout_height="35dp"
+                app:separateLineColor="#D6D6D9"
+                app:unselectedTextColor="@color/white"
+                app:selectedTextColor="@color/white"
+                app:unselectedBackgroundColor="#B3C8C7C7"
+                app:selectedBackgroundColor="@color/main_color"
+                app:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                app:numSegments="2"
+                app:selectedIndex="1"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:text="Flight Path Mode"/>
+
+            <com.trinnguyen.SegmentView
+                android:id="@+id/flightPathModeSegment"
+                android:layout_width="match_parent"
+                android:layout_height="35dp"
+                app:separateLineColor="#D6D6D9"
+                app:unselectedTextColor="@color/white"
+                app:selectedTextColor="@color/white"
+                app:unselectedBackgroundColor="#B3C8C7C7"
+                app:selectedBackgroundColor="@color/main_color"
+                app:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                app:numSegments="2"
+                app:selectedIndex="1"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:text="Finish Action"/>
+
+            <Spinner
+                android:id="@+id/finishActionSpinner"
+                android:layout_width="match_parent"
+                android:background="@drawable/edit_text_border"
+                android:layout_height="35dp"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:text="Heading Mode"/>
+
+            <Spinner
+                android:id="@+id/headingModeSpinner"
+                android:layout_width="match_parent"
+                android:background="@drawable/edit_text_border"
+                android:layout_height="35dp"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:weightSum="10"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/close"
+                android:layout_width="0dp"
+                android:layout_weight="5"
+                android:background="@drawable/edit_text_border"
+                android:layout_height="match_parent"
+                android:text="Close"
+                android:layout_marginRight="4dp"
+                android:textColor="@color/text_primary"/>
+
+            <Button
+                android:id="@+id/saveBtn"
+                android:layout_width="0dp"
+                android:layout_weight="5"
+                android:background="@drawable/primary_button"
+                android:layout_height="match_parent"
+                android:text="Save"
+                android:textColor="@color/text_primary"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

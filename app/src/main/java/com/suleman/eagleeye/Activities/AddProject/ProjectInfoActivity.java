@@ -492,7 +492,6 @@ public class ProjectInfoActivity extends AppCompatActivity implements OnMapReady
     public void onMapReady(GoogleMap map) {
         try {
             googleMap = map;
-
             googleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
             googleMap.getUiSettings().setZoomControlsEnabled(true);
             googleMap.getUiSettings().setCompassEnabled(true);
