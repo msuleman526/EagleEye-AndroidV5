@@ -129,7 +129,37 @@ See `CommandService_V5SDK.java:271-332` for complete implementation.
 - `doNotStrip` for all DJI native libraries to prevent optimization breaking them
 - Only arm64-v8a ABI supported (line 20)
 
-### 7. API Keys & Configuration
+### 7. Media Manager Architecture (CRITICAL for Internal Storage)
+
+**Storage Location Management:**
+DJI drones like Mini 4 Pro have **internal storage** instead of SD cards. The MediaManager requires explicit storage location configuration:
+
+```java
+// Create MediaFileListDataSource for specific storage
+MediaFileListDataSource storageSource = new MediaFileListDataSource.Builder()
+        .setLocation(CameraStorageLocation.INTERNAL)  // or SDCARD
+        .setIndexType(ComponentIndexType.LEFT_OR_MAIN)
+        .build();
+
+// Set data source BEFORE pulling media files
+mediaDataCenter.getMediaManager().setMediaFileDataSource(storageSource);
+```
+
+**Critical workflow (MediaManagerActivity.java):**
+1. `enable()` - Enter media management mode (disables live view/photo capture)
+2. `setMediaFileDataSource()` - Specify storage location (INTERNAL or SDCARD)
+3. `addMediaFileListStateListener()` - Listen for state changes
+4. `pullMediaFileListFromCamera()` - Request file list
+5. Wait for `MediaFileListState.UP_TO_DATE` state
+6. `getMediaFileListData().getData()` - Retrieve media files
+7. `disable()` - Exit media mode in onDestroy()
+
+**Important notes:**
+- Default to `CameraStorageLocation.INTERNAL` for drones without SD cards
+- `FETCH_FILE_LIST_FAILED` error with 0 files usually means empty storage or wrong location
+- Always call `disable()` in onDestroy() to restore normal camera operation
+
+### 8. API Keys & Configuration
 
 **Configured in `gradle.properties`:**
 - `AIRCRAFT_API_KEY` - DJI SDK registration key
@@ -170,6 +200,35 @@ Activities use `android:configChanges="orientation|screenSize|screenLayout|keybo
 - Re-bind view references
 - Do NOT re-register observers/listeners
 
+### Accessing Media Files from Drone Storage
+
+**For drones with internal storage (Mini 4 Pro):**
+1. Call `mediaManager.enable()` to enter media mode
+2. Set data source: `setMediaFileDataSource(CameraStorageLocation.INTERNAL)`
+3. Pull media list: `pullMediaFileListFromCamera()`
+4. Listen for `MediaFileListState.UP_TO_DATE`
+5. Retrieve files: `getMediaFileListData().getData()`
+6. Load thumbnails: `mediaFile.pullThumbnailFromCamera(callback)`
+7. Clean up: `mediaManager.disable()` in onDestroy()
+
+**Storage toggle pattern (MediaManagerActivity):**
+- Default to internal storage
+- Provide UI toggle to switch between INTERNAL and SDCARD
+- Use `setMediaFileDataSource()` before each pull operation
+- Clear and reload media list when switching storage
+
+### Dynamic Grid Layout
+
+RecyclerView grid columns should adapt to screen width:
+```java
+// Calculate span count based on item width (e.g., 130dp)
+DisplayMetrics metrics = getResources().getDisplayMetrics();
+int screenWidthPx = metrics.widthPixels;
+float itemWidthPx = ITEM_WIDTH_DP * metrics.density;
+int spanCount = (int) (screenWidthPx / itemWidthPx);
+return Math.max(1, Math.min(spanCount, 10));
+```
+
 ## Project Structure
 
 ```
@@ -178,6 +237,7 @@ app/src/main/java/com/suleman/eagleeye/
 │   ├── DJIApplication.java          # Base app class with SDK init
 │   ├── DJIMainActivity.java         # Base activity class
 │   ├── MainActivity.java             # Main connection UI
+│   ├── MediaManagerActivity.java    # Media file browser (internal/SD)
 │   ├── WaypointActivity.java        # Waypoint mission execution
 │   ├── FPVCameraActivity.java       # Live camera feed
 │   ├── AddProject/                  # Project creation flow
@@ -189,9 +249,12 @@ app/src/main/java/com/suleman/eagleeye/
 ├── models/              # Data models & ViewModels
 │   ├── GlobalViewModelStore.java    # Global VM store
 │   ├── MSDKInfoVm.java              # SDK state VM
+│   ├── MediaItem.java               # Media file model
 │   ├── Project.java                 # Project data
 │   ├── Flight.java                  # Flight records
 │   └── MissionSetting.java          # Mission config
+├── Adapters/            # RecyclerView adapters
+│   └── MediaGridAdapter.java        # Media grid with thumbnails
 ├── util/                # Utility classes
 │   ├── KMZTestUtil.java             # Mission creation helpers
 │   ├── KmzCleaner.java              # KMZ post-processing
@@ -199,7 +262,6 @@ app/src/main/java/com/suleman/eagleeye/
 │   ├── TelemetryDisplayManager.java # UI telemetry
 │   └── wpml/WaypointInfoModel.java  # Waypoint data
 ├── Fragments/           # UI fragments
-├── Adapters/            # RecyclerView adapters
 ├── Retrofit/            # Network layer
 └── EagleEyeApplication.java  # Main application class
 ```

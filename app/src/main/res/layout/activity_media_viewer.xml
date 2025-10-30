@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black">
+
+    <!-- Header -->
+
+
+    <!-- Media Display Area -->
+    <FrameLayout
+        android:id="@+id/mediaContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!-- Image View for Photos -->
+        <ImageView
+            android:id="@+id/photoImageView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitCenter"
+            android:visibility="gone" />
+
+        <!-- Video Surface for Videos -->
+        <SurfaceView
+            android:id="@+id/videoSurfaceView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
+        <!-- Loading Progress -->
+        <ProgressBar
+            android:id="@+id/loadingProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="visible" />
+
+        <!-- Loading Text -->
+        <TextView
+            android:id="@+id/loadingText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="60dp"
+            android:text="Loading media..."
+            android:textColor="@android:color/white"
+            android:textSize="14sp" />
+
+    </FrameLayout>
+
+    <RelativeLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="#BB000000"
+        android:elevation="4dp">
+
+        <ImageView
+            android:id="@+id/backBtn"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:padding="8dp"
+            android:src="@drawable/back"
+            app:tint="@android:color/white" />
+
+        <TextView
+            android:id="@+id/headerTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="Media Viewer"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/infoBtn"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="10dp"
+            android:padding="8dp"
+            android:src="@android:drawable/ic_menu_info_details"
+            app:tint="@android:color/white" />
+
+    </RelativeLayout>
+
+    <!-- Bottom Action Bar -->
+    <RelativeLayout
+        android:id="@+id/bottomBar"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_alignParentBottom="true"
+        android:background="#BB000000"
+        android:elevation="4dp"
+        android:padding="10dp">
+
+        <!-- Delete Button (Bottom-Left) -->
+        <FrameLayout
+            android:id="@+id/deleteBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="20dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/deleteIcon"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@android:drawable/ic_menu_delete"
+                    app:tint="@android:color/white" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Delete"
+                    android:textColor="@android:color/white"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+        <!-- Play/Pause Button (Center, for videos only) -->
+        <LinearLayout
+            android:id="@+id/playPauseBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/playPauseIcon"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@android:drawable/ic_media_play"
+                app:tint="@android:color/white" />
+
+            <TextView
+                android:id="@+id/playPauseText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Play"
+                android:textColor="@android:color/white"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <!-- Download Button (Bottom-Right) with Progress Overlay -->
+        <FrameLayout
+            android:id="@+id/downloadBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="20dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <LinearLayout
+                android:id="@+id/downloadButtonLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/downloadIcon"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@android:drawable/stat_sys_download"
+                    app:tint="@android:color/white" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Download"
+                    android:textColor="@android:color/white"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+
+            <!-- Download Progress Indicator (overlays download button) -->
+            <LinearLayout
+                android:id="@+id/downloadProgressLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <ProgressBar
+                    android:id="@+id/downloadProgress"
+                    style="?android:attr/progressBarStyle"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp" />
+
+                <TextView
+                    android:id="@+id/downloadProgressText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="0%"
+                    android:textColor="@android:color/white"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+    </RelativeLayout>
+
+    <!-- Info Panel (initially hidden) -->
+    <ScrollView
+        android:id="@+id/infoPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/bottomBar"
+        android:background="#DD000000"
+        android:visibility="gone"
+        android:maxHeight="400dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Media Information"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp" />
+
+            <!-- File Name -->
+            <TextView
+                android:id="@+id/infoFileName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Name: "
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- Creation Date -->
+            <TextView
+                android:id="@+id/infoDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Date: "
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- File Size -->
+            <TextView
+                android:id="@+id/infoFileSize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Size: "
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- Resolution -->
+            <TextView
+                android:id="@+id/infoResolution"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Resolution: "
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- File Type/Format -->
+            <TextView
+                android:id="@+id/infoFileType"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="File Format: "
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- Video Duration (videos only) -->
+            <TextView
+                android:id="@+id/infoDuration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Duration: "
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:layout_marginBottom="6dp"
+                android:visibility="gone" />
+
+            <!-- Video Encoding (videos only) -->
+            <TextView
+                android:id="@+id/infoEncoding"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Encoding: "
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:layout_marginBottom="6dp"
+                android:visibility="gone" />
+
+            <!-- Aperture (photos only) -->
+            <TextView
+                android:id="@+id/infoAperture"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Aperture: "
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:layout_marginBottom="6dp"
+                android:visibility="gone" />
+
+            <!-- Shutter Speed (photos only) -->
+            <TextView
+                android:id="@+id/infoShutter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Shutter Speed: "
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:layout_marginBottom="6dp"
+                android:visibility="gone" />
+
+            <!-- ISO (photos only) -->
+            <TextView
+                android:id="@+id/infoISO"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ISO: "
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:layout_marginBottom="6dp"
+                android:visibility="gone" />
+
+            <!-- Storage Location -->
+            <TextView
+                android:id="@+id/infoStorageLocation"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Storage: "
+                android:textColor="@android:color/white"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</RelativeLayout>

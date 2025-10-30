@@ -20,6 +20,9 @@ public class MediaItem {
     private boolean isVideo;
     private MediaFile mediaFile; // DJI MediaFile reference
     private boolean isSelected;
+    private long videoDuration; // Duration in seconds for videos
+    private long createdDate; // Timestamp
+    private String resolution; // e.g., "3840x2160"
 
     public MediaItem() {
         this.isSelected = false;
@@ -73,6 +76,30 @@ public class MediaItem {
         isSelected = selected;
     }
 
+    public long getVideoDuration() {
+        return videoDuration;
+    }
+
+    public void setVideoDuration(long videoDuration) {
+        this.videoDuration = videoDuration;
+    }
+
+    public long getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(long createdDate) {
+        this.createdDate = createdDate;
+    }
+
+    public String getResolution() {
+        return resolution;
+    }
+
+    public void setResolution(String resolution) {
+        this.resolution = resolution;
+    }
+
     /**
      * Get formatted file size string
      */
@@ -86,5 +113,17 @@ public class MediaItem {
         } else {
             return String.format("%.2f GB", fileSize / (1024.0 * 1024.0 * 1024.0));
         }
+    }
+
+    /**
+     * Get formatted video duration (MM:SS)
+     */
+    public String getFormattedDuration() {
+        if (!isVideo || videoDuration <= 0) {
+            return "";
+        }
+        long minutes = videoDuration / 60;
+        long seconds = videoDuration % 60;
+        return String.format("%d:%02d", minutes, seconds);
     }
 }

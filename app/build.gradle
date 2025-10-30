@@ -133,6 +133,9 @@ dependencies {
     implementation 'com.github.mukeshsolanki:Google-Places-AutoComplete-EditText:0.0.8'
     implementation 'com.github.trinnguyen:Android-SegmentView:master-SNAPSHOT'
 
+    // ExoPlayer for video playback
+    implementation 'com.google.android.exoplayer:exoplayer:2.19.1'
+
     // Testing Dependencies
     testImplementation deps.junit4
     androidTestImplementation deps.junitExt

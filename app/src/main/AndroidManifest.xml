@@ -53,6 +53,7 @@
         <activity
             android:name=".Activities.SplashActivity"
             android:exported="true"
+            android:screenOrientation="landscape"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -64,6 +65,7 @@
         <activity
             android:name=".Activities.MainActivity"
             android:exported="true"
+            android:screenOrientation="landscape"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden">
             <intent-filter>
                 <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
@@ -77,6 +79,7 @@
         <activity
             android:name=".Activities.WaypointActivity"
             android:exported="false"
+            android:screenOrientation="landscape"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:theme="@style/Theme.EagleEyeAndroid" />
 
@@ -84,6 +87,7 @@
         <activity
             android:name=".Activities.AddProject.ProjectInfoActivity"
             android:exported="false"
+            android:screenOrientation="landscape"
             android:theme="@style/Theme.EagleEyeAndroid" />
 
         <!-- Waypoint Activity -->
@@ -96,19 +100,30 @@
         <activity
             android:name=".Activities.AddProject.ProjectWaypointActivity"
             android:exported="false"
+            android:screenOrientation="landscape"
             android:theme="@style/Theme.EagleEyeAndroid" />
 
         <activity
             android:name=".Activities.FPVCameraActivity"
+            android:screenOrientation="landscape"
             android:exported="false"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:theme="@style/Theme.EagleEyeAndroid" />
 
         <activity
             android:name=".Activities.MediaManagerActivity"
+            android:screenOrientation="landscape"
             android:exported="false"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:theme="@style/Theme.EagleEyeAndroid" />
+
+        <!-- Media Viewer Activity -->
+        <activity
+            android:name=".Activities.MediaViewerActivity"
+            android:screenOrientation="landscape"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
 
         <!-- Services -->
         <service

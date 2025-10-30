@@ -64,15 +64,24 @@ public class MediaGridAdapter extends RecyclerView.Adapter<MediaGridAdapter.Medi
         if (mediaItem.getThumbnail() != null) {
             holder.mediaThumbnail.setImageBitmap(mediaItem.getThumbnail());
         } else {
-            // Show placeholder
-            holder.mediaThumbnail.setImageResource(R.drawable.media);
+            holder.mediaThumbnail.setImageResource(R.drawable.placeholder);
         }
 
-        // Show video play icon for videos
+        // Show video play icon and duration for videos
         if (mediaItem.isVideo()) {
             holder.videoPlayIcon.setVisibility(View.VISIBLE);
+
+            // Show video duration
+            String duration = mediaItem.getFormattedDuration();
+            if (duration != null && !duration.isEmpty()) {
+                holder.videoDuration.setText(duration);
+                holder.videoDuration.setVisibility(View.VISIBLE);
+            } else {
+                holder.videoDuration.setVisibility(View.GONE);
+            }
         } else {
             holder.videoPlayIcon.setVisibility(View.GONE);
+            holder.videoDuration.setVisibility(View.GONE);
         }
 
         // Set selection state
@@ -105,6 +114,7 @@ public class MediaGridAdapter extends RecyclerView.Adapter<MediaGridAdapter.Medi
     public static class MediaViewHolder extends RecyclerView.ViewHolder {
         ImageView mediaThumbnail;
         ImageView videoPlayIcon;
+        TextView videoDuration;
         TextView mediaFileName;
         TextView mediaFileSize;
         CheckBox mediaCheckbox;
@@ -113,6 +123,7 @@ public class MediaGridAdapter extends RecyclerView.Adapter<MediaGridAdapter.Medi
             super(itemView);
             mediaThumbnail = itemView.findViewById(R.id.mediaThumbnail);
             videoPlayIcon = itemView.findViewById(R.id.videoPlayIcon);
+            videoDuration = itemView.findViewById(R.id.videoDuration);
             mediaFileName = itemView.findViewById(R.id.mediaFileName);
             mediaFileSize = itemView.findViewById(R.id.mediaFileSize);
             mediaCheckbox = itemView.findViewById(R.id.mediaCheckbox);

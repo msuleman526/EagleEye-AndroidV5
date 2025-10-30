@@ -107,6 +107,13 @@ public class MainActivity extends DJIMainActivity {
             }
         });
 
+        findViewById(R.id.mediaButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(MainActivity.this, MediaManagerActivity.class));
+            }
+        });
+
         findViewById(R.id.startSurveyButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
