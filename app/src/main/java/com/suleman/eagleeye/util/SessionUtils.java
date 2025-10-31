@@ -383,4 +383,62 @@ public class SessionUtils {
         String token = getAuthToken();
         return token != null && !token.isEmpty();
     }
+
+    /**
+     * Save current flight ID for flight ended log
+     */
+    public static void saveCurrentFlightId(Integer flightId) {
+        if (context == null) {
+            Log.e(TAG, "SessionUtils not initialized. Call initialize() first.");
+            return;
+        }
+
+        try {
+            SharedPreferences prefs = getPreferences(context);
+            SharedPreferences.Editor editor = prefs.edit();
+            if (flightId != null) {
+                editor.putInt("current_flight_id", flightId);
+                Log.d(TAG, "Saved current flight ID: " + flightId);
+            } else {
+                editor.remove("current_flight_id");
+                Log.d(TAG, "Cleared current flight ID");
+            }
+            editor.apply();
+        } catch (Exception e) {
+            Log.e(TAG, "Error saving current flight ID: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Get current flight ID for flight ended log
+     */
+    public static Integer getCurrentFlightId() {
+        if (context == null) {
+            Log.e(TAG, "SessionUtils not initialized. Call initialize() first.");
+            return null;
+        }
+
+        try {
+            SharedPreferences prefs = getPreferences(context);
+            if (prefs.contains("current_flight_id")) {
+                int flightId = prefs.getInt("current_flight_id", -1);
+                if (flightId != -1) {
+                    Log.d(TAG, "Retrieved current flight ID: " + flightId);
+                    return flightId;
+                }
+            }
+            Log.d(TAG, "No current flight ID found");
+            return null;
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting current flight ID: " + e.getMessage(), e);
+            return null;
+        }
+    }
+
+    /**
+     * Clear current flight ID after flight ended
+     */
+    public static void clearCurrentFlightId() {
+        saveCurrentFlightId(null);
+    }
 }

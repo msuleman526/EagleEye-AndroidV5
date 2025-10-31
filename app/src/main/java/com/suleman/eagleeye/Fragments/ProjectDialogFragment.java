@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -25,7 +26,9 @@ import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.gson.Gson;
 import com.suleman.eagleeye.Activities.AddProject.ProjectInfoActivity;
+import com.suleman.eagleeye.Activities.MediaManagerActivity;
 import com.suleman.eagleeye.Activities.WaypointActivity;
 import com.suleman.eagleeye.Adapters.OnProjectClickListener;
 import com.suleman.eagleeye.Adapters.OnProjectEditClickListener;
@@ -33,6 +36,7 @@ import com.suleman.eagleeye.Adapters.ProjectAdapter;
 import com.suleman.eagleeye.ApiResponse.ProjectsResponse;
 import com.suleman.eagleeye.R;
 import com.suleman.eagleeye.Retrofit.ApiClient;
+import com.suleman.eagleeye.models.FlightLog;
 import com.suleman.eagleeye.models.Project;
 import com.suleman.eagleeye.util.UserSessionManager;
 
@@ -133,7 +137,6 @@ public class ProjectDialogFragment extends DialogFragment {
                 if (isUploadPhotosMode) {
                     handleUploadPhotosProjectSelection(project);
                 } else if (projectSelectionListener != null) {
-                    // Handle MediaManager project selection for submit functionality
                     handleMediaManagerProjectSelection(project);
                 } else {
                     // Original behavior for mission planner
@@ -343,18 +346,13 @@ public class ProjectDialogFragment extends DialogFragment {
                 Toast.makeText(requireContext(), "No Flight exists with this project", Toast.LENGTH_SHORT).show();
                 return;
             }
-
-            Log.d(TAG, "Project has " + project.flights.size() + " flight(s)");
-
             if (project.flights.size() == 1) {
-                // Only one flight - pass project to MediaManager with index 0
                 openMediaManagerWithProject(project, 0);
+                dismiss(); // Dismiss after opening MediaManager for single flight
             } else {
-                // Multiple flights - show flight selection dialog
                 showFlightSelectionDialog(project);
+                // Don't dismiss here - let the flight selection callback handle it
             }
-
-            dismiss(); // Dismiss current dialog
 
         } catch (Exception e) {
             Log.e(TAG, "Error handling upload photos project selection: " + e.getMessage());
@@ -395,17 +393,23 @@ public class ProjectDialogFragment extends DialogFragment {
      */
     private void openMediaManagerWithProject(Project project, int flightIndex) {
         try {
-//            Intent intent = new Intent(requireContext(), MediaManagerActivity.class);
-//            intent.putExtra("project", project);
-//            intent.putExtra("flight_index", flightIndex);
-//            intent.putExtra("upload_photos_mode", true);
-//
-//            Log.d(TAG, "Opening MediaManager with project: " + project.name + ", flight index: " + flightIndex);
-//            startActivity(intent);
-
+            FlightLog flightLog = project.flights.get(flightIndex);
+            if(flightLog.getEnded_at() == null || flightLog.getEnded_at().equals("")){
+                String json = flightLog.getLog();
+                Gson gson = new Gson();
+                com.suleman.eagleeye.models.Log log = gson.fromJson(json, com.suleman.eagleeye.models.Log.class);
+                flightLog.setEnded_at(log.estimateEndTime);
+            }
+            Intent intent = new Intent(requireContext(), MediaManagerActivity.class);
+            intent.putExtra("project", project);
+            intent.putExtra("flight", project.flights.get(flightIndex));
+            intent.putExtra("upload_photos_mode", true);
+            startActivity(intent);
         } catch (Exception e) {
             Log.e(TAG, "Error opening MediaManager: " + e.getMessage());
-            Toast.makeText(requireContext(), "Error opening Media Manager", Toast.LENGTH_SHORT).show();
+            if (isAdded() && getContext() != null) {
+                Toast.makeText(getContext(), "Error opening Media Manager", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -413,22 +417,26 @@ public class ProjectDialogFragment extends DialogFragment {
      * Show flight selection dialog for multiple flights
      */
     private void showFlightSelectionDialog(Project project) {
-//        try {
-//            FlightSelectionDialogFragment dialog = FlightSelectionDialogFragment.newInstance(project);
-//            dialog.setFlightSelectionListener(new FlightSelectionDialogFragment.FlightSelectionListener() {
-//                @Override
-//                public void onFlightSelected(Project selectedProject, int flightIndex) {
-//                    openMediaManagerWithProject(selectedProject, flightIndex);
-//                }
-//            });
-//
-//            dialog.show(getParentFragmentManager(), "FlightSelectionDialog");
-//            Log.d(TAG, "Flight selection dialog shown for project: " + project.name);
-//
-//        } catch (Exception e) {
-//            Log.e(TAG, "Error showing flight selection dialog: " + e.getMessage());
-//            Toast.makeText(requireContext(), "Error showing flight selection", Toast.LENGTH_SHORT).show();
-//        }
+        try {
+            FlightSelectionDialogFragment dialog = FlightSelectionDialogFragment.newInstance(project);
+            dialog.setFlightSelectionListener(new FlightSelectionDialogFragment.FlightSelectionListener() {
+                @Override
+                public void onFlightSelected(Project selectedProject, int flightIndex) {
+                    openMediaManagerWithProject(selectedProject, flightIndex);
+                    // Dismiss ProjectDialogFragment after opening MediaManager
+                    dismiss();
+                }
+            });
+
+            dialog.show(getParentFragmentManager(), "FlightSelectionDialog");
+            Log.d(TAG, "Flight selection dialog shown for project: " + project.name);
+
+        } catch (Exception e) {
+            Log.e(TAG, "Error showing flight selection dialog: " + e.getMessage());
+            if (isAdded() && getContext() != null) {
+                Toast.makeText(getContext(), "Error showing flight selection", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     @Override

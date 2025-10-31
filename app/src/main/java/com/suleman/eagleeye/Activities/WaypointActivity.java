@@ -51,7 +51,10 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import com.suleman.eagleeye.Fragments.CameraFeedFragment;
+import com.google.gson.Gson;
+import com.suleman.eagleeye.ApiResponse.FlightLogResponse;
 import com.suleman.eagleeye.R;
+import com.suleman.eagleeye.Retrofit.ApiClient;
 import com.suleman.eagleeye.Services.CommandService_V5SDK;
 import com.suleman.eagleeye.Services.ConnectionStateManager;
 import com.suleman.eagleeye.Services.TelemetryService;
@@ -67,6 +70,12 @@ import com.suleman.eagleeye.util.PermissionHelper;
 import com.suleman.eagleeye.util.SessionUtils;
 import com.suleman.eagleeye.util.SpeedDisplayManager;
 import com.suleman.eagleeye.util.TelemetryDisplayManager;
+import com.suleman.eagleeye.util.UserSessionManager;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -112,6 +121,11 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
     private CameraFeedFragment cameraFeedFragment;
     private TelemetryDisplayManager telemetryDisplayManager;
     private SpeedDisplayManager speedDisplayManager;
+
+    // Flight logging
+    private UserSessionManager userSessionManager;
+    private com.suleman.eagleeye.models.Log currentFlightLog;
+    private int currentLastWaypoint = 0;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,6 +136,13 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
         waypointsList = new ArrayList<>();
         points = new ArrayList<>();
         uiHandler = new Handler(Looper.getMainLooper());
+
+        // Initialize SessionUtils for flight ID caching
+        SessionUtils.initialize(this);
+
+        // Initialize user session manager for API token
+        userSessionManager = new UserSessionManager(this);
+
         initializeUI();
         initializeServices();
         initializeDisplayManagers();
@@ -129,14 +150,19 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
         checkPermissions();
         initCameraFeedFragment();
 
+        updateConnection(ConnectionStateManager.getInstance().isCurrentlyConnected());
         ConnectionStateManager.getInstance().getConnectionState().observe(this, isConnected -> {
             Log.d(TAG, "🔗 Connection state changed: " + isConnected);
-            if(isConnected){
-                connectionBar.setImageDrawable(getDrawable(R.drawable.connected_bar));
-            }else{
-                connectionBar.setImageDrawable(getDrawable(R.drawable.disconnected_bar));
-            }
+            updateConnection(isConnected);
         });
+    }
+
+    void updateConnection(boolean isConnected){
+        if(isConnected){
+            connectionBar.setImageDrawable(getDrawable(R.drawable.connected_bar));
+        }else{
+            connectionBar.setImageDrawable(getDrawable(R.drawable.disconnected_bar));
+        }
     }
 
     private void initializeDisplayManagers() {
@@ -444,7 +470,6 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
         startMissionButton.setOnClickListener(v -> {
             // Check storage permissions before starting mission
             if (!PermissionHelper.hasStoragePermissions(this)) {
-                PermissionHelper.showStoragePermissionExplanation(this);
                 PermissionHelper.requestStoragePermissions(this);
                 return;
             }
@@ -457,7 +482,6 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
                 stopMissionButton.setVisibility(View.VISIBLE);
                 pauseResumeButton.setEnabled(true);
                 pauseResumeButton.setVisibility(View.VISIBLE);
-                stopMissionButton.setVisibility(View.GONE);
                 missionPaused = false;
             } else {
                 Toast.makeText(this, "Command service not available", Toast.LENGTH_SHORT).show();
@@ -478,14 +502,12 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
                     pauseResumeButton.setImageDrawable(getDrawable(R.drawable.pause));
                     pauseResumeButton.setVisibility(View.VISIBLE);
                     stopMissionButton.setVisibility(View.VISIBLE);
-                    stopMissionButton.setVisibility(View.GONE);
                     missionPaused = false;
                 } else {
                     commandService.pauseMission();
                     pauseResumeButton.setImageDrawable(getDrawable(R.drawable.resume));
                     pauseResumeButton.setVisibility(View.VISIBLE);
                     stopMissionButton.setVisibility(View.VISIBLE);
-                    stopMissionButton.setVisibility(View.GONE);
                     missionPaused = true;
                 }
             }
@@ -772,19 +794,249 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
             switch (statusType) {
                 case CommandService_V5SDK.STATUS_MISSION_STARTED:
                     missionInProgress = true;
+                    // Call flight started log API
+                    createAndSaveFlightStartedLog();
                     break;
+
+                case CommandService_V5SDK.STATUS_HEADING_TO_WAYPOINT:
+                    // Update last waypoint during flight
+                    int currentWaypoint = intent.getIntExtra(CommandService_V5SDK.EXTRA_CURRENT_WAYPOINT, 0);
+                    if (currentWaypoint > 0) {
+                        currentLastWaypoint = currentWaypoint;
+                        Log.d(TAG, "Updated last waypoint to: " + currentLastWaypoint);
+                    }
+                    break;
+
                 case CommandService_V5SDK.STATUS_MISSION_COMPLETED:
                 case CommandService_V5SDK.STATUS_RETURNING_HOME:
                 case CommandService_V5SDK.STATUS_ERROR:
                     missionInProgress = false;
+                    saveFlightEndedLog();
                     runOnUiThread(() -> resetMissionButtons());
                     break;
             }
-            
+
             Log.d(TAG, "Received status update: " + statusType + " - " + message);
         }
     };
-    
+
+    /**
+     * Create flight log and call API when mission starts
+     */
+    private void createAndSaveFlightStartedLog() {
+        try {
+            if (currentProject == null) {
+                Log.e(TAG, "Cannot create flight log: currentProject is null");
+                return;
+            }
+
+            // Get current date and time
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+            String startTime = dateFormat.format(new Date());
+
+            // Calculate estimated end time (current time + 13 minutes)
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.MINUTE, 13);
+            String estimatedEndTime = dateFormat.format(calendar.getTime());
+
+            // Get drone name from ConnectionStateManager
+            String droneName = ConnectionStateManager.getInstance().getCurrentDroneName();
+            if (droneName == null || droneName.isEmpty() || droneName.equals("No Drone Connected")) {
+                droneName = "Unknown Drone";
+            }
+
+            // Get number of waypoints
+            int numberOfWaypoints = waypointsList != null ? waypointsList.size() : 0;
+
+            // Get number of obstacles
+            int numberOfObstacles = 0;
+            List<Obstacle> obstacles = currentProject.getObstacles();
+            if (obstacles != null) {
+                numberOfObstacles = obstacles.size();
+            }
+            int waypointHeight = currentProject.must_height + 10;
+            int horizontalPathHeight = currentProject.height_of_house + 45;
+            int houseHeight = currentProject.height_of_house;
+            int maxObstacleHeight = currentProject.must_height;
+            int droneSpeed = (int) (missionSetting != null ? missionSetting.autoFlighSpeed : 8);
+            int flightStartBattery = 0;
+            if (telemetryService != null) {
+                Integer battery = telemetryService.getCurrentBatteryPercentage();
+                flightStartBattery = battery != null ? battery : 0;
+            }
+            String finishAction = missionSetting != null ? missionSetting.getFinishActionDisplay() : "Go Home";
+            String headingMode = "Towards POI";
+            String rotateGimbalPitch = "true";
+            String goToFirstWaypointMode = missionSetting != null ? missionSetting.getFlyToWaylineModeDisplay() : "Safely";
+            currentLastWaypoint = 0;
+            currentFlightLog = new com.suleman.eagleeye.models.Log(
+                    startTime,
+                    estimatedEndTime,
+                    droneName,
+                    numberOfWaypoints,
+                    ""+numberOfObstacles,
+                    waypointHeight,
+                    horizontalPathHeight,
+                    houseHeight,
+                    maxObstacleHeight,
+                    droneSpeed,
+                    flightStartBattery,
+                    finishAction,
+                    headingMode,
+                    rotateGimbalPitch,
+                    goToFirstWaypointMode,
+                    currentLastWaypoint
+            );
+            Gson gson = new Gson();
+            String logJson = gson.toJson(currentFlightLog);
+
+            // Get auth token
+            String token = userSessionManager.getToken();
+            if (token == null || token.isEmpty()) {
+                Log.e(TAG, "Cannot save flight log: No auth token found");
+                Toast.makeText(this, "Authentication error: Please login again", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            String authToken = "Bearer " + token;
+            SimpleDateFormat apiDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+            String currentDateTime = apiDateFormat.format(new Date());
+            String projectId = String.valueOf(currentProject.id);
+
+            Log.d(TAG, "Calling saveFlightStartedLog API...");
+            Log.d(TAG, "Project ID: " + projectId);
+            Log.d(TAG, "Date: " + currentDateTime);
+            Log.d(TAG, "Flight Log: " + logJson);
+
+            // Call API
+            ApiClient.getApiService().
+                    saveFlightStartedLog(authToken, projectId, currentDateTime, logJson)
+                    .enqueue(new retrofit2.Callback<FlightLogResponse>() {
+                        @Override
+                        public void onResponse(retrofit2.Call<FlightLogResponse> call, retrofit2.Response<FlightLogResponse> response) {
+                            if (response.isSuccessful() && response.body() != null) {
+                                Log.d(TAG, "✅ Flight started log saved successfully");
+
+                                // Store the flight ID from response in cache
+                                FlightLogResponse flightLogResponse = response.body();
+                                if (flightLogResponse.flight != null && flightLogResponse.flight.getId() != null) {
+                                    Integer flightId = flightLogResponse.flight.getId();
+                                    SessionUtils.saveCurrentFlightId(flightId);
+                                    Log.d(TAG, "✅ Stored flight ID in cache for end log: " + flightId);
+                                } else {
+                                    Log.e(TAG, "⚠️ Warning: Flight ID not found in response");
+                                }
+                            } else {
+                                Log.e(TAG, "❌ Failed to save flight started log. Response code: " + response.code());
+                                try {
+                                    if (response.errorBody() != null) {
+                                        Log.e(TAG, "Error body: " + response.errorBody().string());
+                                    }
+                                } catch (Exception e) {
+                                    Log.e(TAG, "Error reading error body: " + e.getMessage());
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(retrofit2.Call<FlightLogResponse> call, Throwable t) {
+                            Log.e(TAG, "❌ Network error saving flight started log: " + t.getMessage(), t);
+                        }
+                    });
+
+        } catch (Exception e) {
+            Log.e(TAG, "❌ Error creating flight started log: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Update flight log and call API when mission ends
+     */
+    private void saveFlightEndedLog() {
+        try {
+            if (currentFlightLog == null) {
+                Log.e(TAG, "Cannot save flight ended log: currentFlightLog is null");
+                return;
+            }
+
+            // Get flight ID from cache (persisted from started log response)
+            Integer currentFlightId = SessionUtils.getCurrentFlightId();
+            if (currentFlightId == null) {
+                Log.e(TAG, "Cannot save flight ended log: currentFlightId is null (no started log response in cache)");
+                return;
+            }
+
+            // Get current date and time as end time
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+            String endTime = dateFormat.format(new Date());
+
+            // Update the log with end time and last waypoint
+            currentFlightLog.endTime = endTime;
+            currentFlightLog.lastWaypoint = currentLastWaypoint;
+
+            // Convert Log to JSON string
+            Gson gson = new Gson();
+            String logJson = gson.toJson(currentFlightLog);
+
+            // Get auth token
+            String token = userSessionManager.getToken();
+            if (token == null || token.isEmpty()) {
+                Log.e(TAG, "Cannot save flight ended log: No auth token found");
+                return;
+            }
+
+            // Prepare token with Bearer prefix
+            String authToken = "Bearer " + token;
+            SimpleDateFormat apiDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+            String currentDateTime = apiDateFormat.format(new Date());
+
+            // Use flight ID instead of project ID
+            String flightId = String.valueOf(currentFlightId);
+
+            Log.d(TAG, "Calling saveFlightEndedLog API...");
+            Log.d(TAG, "Flight ID: " + flightId);
+            Log.d(TAG, "Date: " + currentDateTime);
+            Log.d(TAG, "Flight Log: " + logJson);
+
+            // Call API with flight ID (not project ID)
+            ApiClient.getApiService().saveFlightEndedLog(authToken, flightId, currentDateTime, logJson)
+                    .enqueue(new retrofit2.Callback<FlightLogResponse>() {
+                        @Override
+                        public void onResponse(retrofit2.Call<FlightLogResponse> call, retrofit2.Response<FlightLogResponse> response) {
+                            if (response.isSuccessful() && response.body() != null) {
+                                Log.d(TAG, "✅ Flight ended log saved successfully");
+
+                                // Clear the flight ID from cache after successful save
+                                SessionUtils.clearCurrentFlightId();
+                                Log.d(TAG, "✅ Cleared flight ID from cache");
+
+                                runOnUiThread(() -> Toast.makeText(WaypointActivity.this,
+                                        "Flight log completed", Toast.LENGTH_SHORT).show());
+                            } else {
+                                Log.e(TAG, "❌ Failed to save flight ended log. Response code: " + response.code());
+                                try {
+                                    if (response.errorBody() != null) {
+                                        Log.e(TAG, "Error body: " + response.errorBody().string());
+                                    }
+                                } catch (Exception e) {
+                                    Log.e(TAG, "Error reading error body: " + e.getMessage());
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(retrofit2.Call<FlightLogResponse> call, Throwable t) {
+                            Log.e(TAG, "❌ Network error saving flight ended log: " + t.getMessage(), t);
+                        }
+                    });
+
+            // Clear the current flight log
+            currentFlightLog = null;
+
+        } catch (Exception e) {
+            Log.e(TAG, "❌ Error saving flight ended log: " + e.getMessage(), e);
+        }
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();

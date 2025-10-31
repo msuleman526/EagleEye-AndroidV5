@@ -1,12 +1,15 @@
 package com.suleman.eagleeye.Activities;
 
+import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.Window;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -19,10 +22,23 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.suleman.eagleeye.Adapters.MediaGridAdapter;
 import com.suleman.eagleeye.R;
+import com.suleman.eagleeye.Retrofit.ApiClient;
+import com.suleman.eagleeye.Retrofit.ApiService;
+import com.suleman.eagleeye.models.FlightLog;
 import com.suleman.eagleeye.models.MediaItem;
+import com.suleman.eagleeye.models.Project;
+import com.suleman.eagleeye.util.UserSessionManager;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import dji.sdk.keyvalue.value.camera.DateTime;
 import dji.v5.common.callback.CommonCallbacks;
@@ -40,6 +56,12 @@ import dji.sdk.keyvalue.value.camera.CameraStorageLocation;
 import dji.sdk.keyvalue.value.common.ComponentIndexType;
 import dji.v5.manager.KeyManager;
 import dji.v5.manager.datacenter.media.MediaFileListDataSource;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * MediaManagerActivity - Display and manage drone media files
@@ -63,22 +85,51 @@ public class MediaManagerActivity extends AppCompatActivity {
     private ImageView backBtn;
     private TextView storageToggleBtn;
     private TextView headerTitle;
+    private TextView uploadBtn;
 
     // Data
     private MediaGridAdapter mediaAdapter;
     private List<MediaItem> mediaItems;
+    private List<MediaItem> allMediaItems; // Store all media before filtering
     private Handler uiHandler;
     private MediaFileListStateListener mediaFileListStateListener;
     private CameraStorageLocation currentStorageLocation = CameraStorageLocation.INTERNAL; // Default to internal storage
     private boolean needsRefresh = false;
+    Project selectedProject;
+    FlightLog flightLog;
+    boolean isUploadPhotosMode = false;
+
+    // Upload tracking
+    private int currentUploadIndex = 0;
+    private boolean isUploading = false;
+    private boolean uploadCancelled = false;
+    private Dialog uploadDialog;
+    private Dialog uploadDoneDialog;
+    private List<MediaItem> photosToUpload;
+    private ApiService apiService;
+
+    private UserSessionManager userSessionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_media_manager);
 
+        userSessionManager = new UserSessionManager(this);
+        Intent intent = getIntent();
+        if (intent != null) {
+            selectedProject = (Project) intent.getSerializableExtra("project");
+            flightLog = (FlightLog) intent.getSerializableExtra("flight");
+            isUploadPhotosMode = intent.getBooleanExtra("upload_photos_mode", false);
+        }
+
         uiHandler = new Handler(Looper.getMainLooper());
         mediaItems = new ArrayList<>();
+        allMediaItems = new ArrayList<>();
+        photosToUpload = new ArrayList<>();
+
+        // Initialize API service
+        apiService = ApiClient.getApiService();
 
         initializeUI();
         setupRecyclerView();
@@ -95,6 +146,7 @@ public class MediaManagerActivity extends AppCompatActivity {
         backBtn = findViewById(R.id.backBtn);
         storageToggleBtn = findViewById(R.id.storageToggleBtn);
         headerTitle = findViewById(R.id.headerTitle);
+        uploadBtn = findViewById(R.id.uploadBtn);
 
         // Back button listener
         backBtn.setOnClickListener(new View.OnClickListener() {
@@ -122,6 +174,31 @@ public class MediaManagerActivity extends AppCompatActivity {
                 toggleStorageLocation();
             }
         });
+
+        // Upload button listener
+        uploadBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String buttonText = uploadBtn.getText().toString();
+                if (buttonText.equals("Cancel")) {
+                    // Cancel upload
+                    uploadCancelled = true;
+                } else {
+                    // Start or resume upload
+                    startUploadProcess();
+                }
+            }
+        });
+
+        // Show/hide upload button based on mode
+        if (isUploadPhotosMode) {
+            uploadBtn.setVisibility(View.VISIBLE);
+            uploadBtn.setText("Upload");
+            // Hide storage toggle in upload mode
+            storageToggleBtn.setVisibility(View.GONE);
+        } else {
+            uploadBtn.setVisibility(View.GONE);
+        }
 
         // Update toggle button text based on current storage
         updateStorageToggleButton();
@@ -462,6 +539,7 @@ public class MediaManagerActivity extends AppCompatActivity {
 
         // Clear existing items
         mediaItems.clear();
+        allMediaItems.clear();
 
         // Convert DJI MediaFile to our MediaItem model
         for (MediaFile djiMediaFile : djiMediaFiles) {
@@ -510,16 +588,25 @@ public class MediaManagerActivity extends AppCompatActivity {
                 Log.w(TAG, "Could not get resolution: " + e.getMessage());
             }
 
-            mediaItems.add(mediaItem);
+            allMediaItems.add(mediaItem);
+        }
 
-            // Load thumbnail for this media item
-            loadThumbnail(mediaItem, mediaItems.size() - 1);
+        // Filter media if in upload mode
+        if (isUploadPhotosMode && flightLog != null) {
+            filterMediaByFlightTime();
+        } else {
+            mediaItems.addAll(allMediaItems);
+        }
+
+        // Load thumbnails for displayed items
+        for (int i = 0; i < mediaItems.size(); i++) {
+            loadThumbnail(mediaItems.get(i), i);
         }
 
         // Update UI
         uiHandler.post(() -> {
             showLoading(false);
-            showEmptyState(false);
+            showEmptyState(mediaItems.isEmpty());
             mediaAdapter.notifyDataSetChanged();
             Log.d(TAG, "Displayed " + mediaItems.size() + " media items");
         });
@@ -702,6 +789,449 @@ public class MediaManagerActivity extends AppCompatActivity {
             }
             // For download or just viewing, no refresh needed
         }
+    }
+
+    /**
+     * Filter media files by flight start and end time
+     */
+    private void filterMediaByFlightTime() {
+        if (flightLog == null || flightLog.getStarted_at() == null || flightLog.getEnded_at() == null) {
+            Log.w(TAG, "FlightLog or timestamps are null, showing all media");
+            mediaItems.addAll(allMediaItems);
+            return;
+        }
+
+        try {
+            // Parse flight log timestamps
+            long flightStartTime = parseFlightLogTimestamp(flightLog.getStarted_at());
+            long flightEndTime = parseFlightLogTimestamp(flightLog.getEnded_at());
+            for (MediaItem item : allMediaItems) {
+                if (!item.isVideo()) {
+                    long mediaTimestamp = item.getCreatedDate();
+                    if (mediaTimestamp >= flightStartTime && mediaTimestamp <= flightEndTime) {
+                        mediaItems.add(item);
+                        Log.d(TAG, "Including photo: " + item.getFileName() + " at " + new Date(mediaTimestamp));
+                    }
+                }
+            }
+
+            Log.d(TAG, "Filtered " + mediaItems.size() + " photos from " + allMediaItems.size() + " total media files");
+
+        } catch (Exception e) {
+            Log.e(TAG, "Error filtering media by flight time: " + e.getMessage(), e);
+            // On error, show all photos
+            for (MediaItem item : allMediaItems) {
+                if (!item.isVideo()) {
+                    mediaItems.add(item);
+                }
+            }
+        }
+    }
+
+    /**
+     * Parse flight log timestamp string to milliseconds
+     * Handles formats: "2025-01-31 14:30:00", "2025-01-31T14:30:00Z", ISO 8601, etc.
+     */
+    private long parseFlightLogTimestamp(String timestampStr) throws ParseException {
+        if (timestampStr == null || timestampStr.isEmpty()) {
+            throw new ParseException("Timestamp string is null or empty", 0);
+        }
+
+        // Try multiple date formats
+        String[] formats = {
+            "yyyy-MM-dd HH:mm:ss",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ssZ",
+            "yyyy-MM-dd'T'HH:mm:ss"
+        };
+
+        for (String format : formats) {
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat(format, Locale.US);
+                // Use default/local timezone for flight log timestamps (they are in local time)
+                // Only use UTC for formats with 'Z' suffix
+                if (format.contains("'Z'")) {
+                    sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+                }
+                Date date = sdf.parse(timestampStr);
+                if (date != null) {
+                    return date.getTime();
+                }
+            } catch (ParseException e) {
+                // Try next format
+            }
+        }
+
+        throw new ParseException("Unable to parse timestamp: " + timestampStr, 0);
+    }
+
+    /**
+     * Start upload process
+     */
+    private void startUploadProcess() {
+        if (isUploading) {
+            Log.w(TAG, "Upload already in progress");
+            return;
+        }
+
+        // Validate project
+        if (selectedProject == null) {
+            Toast.makeText(this, "No project selected", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Check authentication
+        String token = userSessionManager.getToken();
+        if (token == null || token.isEmpty()) {
+            Toast.makeText(this, "Authentication required", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Prepare photos to upload (only photos from filtered list)
+        photosToUpload.clear();
+        for (MediaItem item : mediaItems) {
+            if (!item.isVideo()) {
+                photosToUpload.add(item);
+            }
+        }
+
+        if (photosToUpload.isEmpty()) {
+            Toast.makeText(this, "No photos to upload", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Log.d(TAG, "Starting upload of " + photosToUpload.size() + " photos");
+
+        // Reset upload state
+        uploadCancelled = false;
+        isUploading = true;
+
+        // Update button
+        uploadBtn.setText("Cancel");
+
+        // Start upload from current index (or 0 if starting fresh)
+        uploadNextPhoto();
+    }
+
+    /**
+     * Upload next photo in sequence
+     */
+    private void uploadNextPhoto() {
+        if (uploadCancelled) {
+            Log.d(TAG, "Upload cancelled by user");
+            handleUploadCancelled();
+            return;
+        }
+
+        if (currentUploadIndex >= photosToUpload.size()) {
+            // All photos uploaded
+            handleUploadComplete();
+            return;
+        }
+
+        MediaItem currentPhoto = photosToUpload.get(currentUploadIndex);
+        int photoNumber = currentUploadIndex + 1;
+        int totalPhotos = photosToUpload.size();
+
+        Log.d(TAG, "Uploading photo " + photoNumber + "/" + totalPhotos + ": " + currentPhoto.getFileName());
+
+        // Show/update upload dialog
+        showUploadDialog(photoNumber, totalPhotos);
+
+        // Download full image from drone
+        downloadAndUploadPhoto(currentPhoto, photoNumber, totalPhotos);
+    }
+
+    /**
+     * Download photo from drone and upload to server
+     */
+    private void downloadAndUploadPhoto(MediaItem mediaItem, int photoNumber, int totalPhotos) {
+        MediaFile djiMediaFile = mediaItem.getMediaFile();
+        if (djiMediaFile == null) {
+            Log.e(TAG, "MediaFile is null for " + mediaItem.getFileName());
+            handleUploadError("Failed to access media file");
+            return;
+        }
+
+        // ByteArrayOutputStream to collect downloaded data
+        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        // Pull original file from camera
+        djiMediaFile.pullOriginalMediaFileFromCamera(0L, new dji.v5.manager.datacenter.media.MediaFileDownloadListener() {
+            @Override
+            public void onStart() {
+                Log.d(TAG, "Download started for " + mediaItem.getFileName());
+            }
+
+            @Override
+            public void onRealtimeDataUpdate(byte[] data, long position) {
+                // Write incoming data to output stream
+                try {
+                    if (data != null && data.length > 0) {
+                        outputStream.write(data);
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error writing realtime data: " + e.getMessage());
+                }
+            }
+
+            @Override
+            public void onProgress(long currentSize, long totalSize) {
+                // Log download progress
+                if (totalSize > 0) {
+                    int progress = (int) ((currentSize * 100) / totalSize);
+                    Log.d(TAG, "Download progress: " + progress + "% (" + currentSize + "/" + totalSize + " bytes)");
+                }
+            }
+
+            @Override
+            public void onFinish() {
+                Log.d(TAG, "Download finished for " + mediaItem.getFileName());
+
+                try {
+                    // Get complete file data
+                    byte[] fileData = outputStream.toByteArray();
+                    outputStream.close();
+
+                    if (fileData == null || fileData.length == 0) {
+                        Log.e(TAG, "Downloaded file data is empty");
+                        handleUploadError("Downloaded file is empty");
+                        return;
+                    }
+
+                    Log.d(TAG, "Downloaded " + fileData.length + " bytes for " + mediaItem.getFileName());
+
+                    // Upload to server
+                    uploadPhotoToServer(mediaItem.getFileName(), fileData, photoNumber, totalPhotos);
+
+                } catch (Exception e) {
+                    Log.e(TAG, "Error processing downloaded file: " + e.getMessage(), e);
+                    handleUploadError("Error processing downloaded file: " + e.getMessage());
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull IDJIError error) {
+                Log.e(TAG, "Failed to download photo from drone: " + error.description());
+                try {
+                    outputStream.close();
+                } catch (Exception e) {
+                    // Ignore
+                }
+                handleUploadError("Failed to download photo: " + error.description());
+            }
+        });
+    }
+
+    /**
+     * Upload photo to server via API
+     */
+    private void uploadPhotoToServer(String fileName, byte[] fileData, int photoNumber, int totalPhotos) {
+        try {
+            // Create temporary file
+            File tempFile = new File(getCacheDir(), fileName);
+            FileOutputStream fos = new FileOutputStream(tempFile);
+            fos.write(fileData);
+            fos.close();
+
+            // Prepare multipart request
+            RequestBody requestFile = RequestBody.create(MediaType.parse("image/*"), tempFile);
+            MultipartBody.Part imagePart = MultipartBody.Part.createFormData("image", fileName, requestFile);
+
+            // Determine if this is the last file
+            boolean isLastFile = (photoNumber == totalPhotos);
+            int completedFlag = isLastFile ? 1 : 0;
+            RequestBody completedBody = RequestBody.create(MediaType.parse("text/plain"), String.valueOf(completedFlag));
+
+            // Get auth token
+            String token = userSessionManager.getToken();
+            String authHeader = "Bearer " + token;
+
+            // Call API
+            Call<retrofit2.Response<String>> call = apiService.uploadMediaImage(
+                authHeader,
+                String.valueOf(selectedProject.id),
+                imagePart,
+                completedBody
+            );
+
+            call.enqueue(new Callback<retrofit2.Response<String>>() {
+                @Override
+                public void onResponse(Call<retrofit2.Response<String>> call, Response<retrofit2.Response<String>> response) {
+                    // Delete temp file
+                    tempFile.delete();
+
+                    if (response.isSuccessful()) {
+                        Log.d(TAG, "Successfully uploaded photo " + photoNumber + "/" + totalPhotos);
+
+                        // Move to next photo
+                        currentUploadIndex++;
+                        uploadNextPhoto();
+                    } else {
+                        Log.e(TAG, "Upload failed with code: " + response.code());
+                        handleUploadError("Upload failed: " + response.message());
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<retrofit2.Response<String>> call, Throwable t) {
+                    // Delete temp file
+                    tempFile.delete();
+
+                    Log.e(TAG, "Upload network error: " + t.getMessage(), t);
+                    handleUploadError("Network error: " + t.getMessage());
+                }
+            });
+
+        } catch (Exception e) {
+            Log.e(TAG, "Error uploading photo: " + e.getMessage(), e);
+            handleUploadError("Upload error: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Show upload progress dialog
+     */
+    private void showUploadDialog(int current, int total) {
+        if (uploadDialog == null) {
+            uploadDialog = new Dialog(this);
+            uploadDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            uploadDialog.setContentView(R.layout.dialog_uploading);
+            uploadDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            uploadDialog.setCancelable(false);
+
+            // Set up cancel icon click listener
+            ImageView cancelIcon = uploadDialog.findViewById(R.id.cancelIcon);
+            cancelIcon.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // Cancel upload
+                    uploadCancelled = true;
+                }
+            });
+        }
+
+        TextView uploadingTxt = uploadDialog.findViewById(R.id.uploadingTxt);
+        uploadingTxt.setText("Uploading " + current + "/" + total + "....");
+
+        if (!uploadDialog.isShowing()) {
+            uploadDialog.show();
+        }
+    }
+
+    /**
+     * Handle upload completion
+     */
+    private void handleUploadComplete() {
+        Log.d(TAG, "All photos uploaded successfully!");
+
+        // Hide upload dialog
+        if (uploadDialog != null && uploadDialog.isShowing()) {
+            uploadDialog.dismiss();
+        }
+
+        // Reset state
+        isUploading = false;
+        currentUploadIndex = 0;
+
+        // Update button
+        uploadBtn.setText("Upload");
+
+        // Show completion dialog
+        showUploadDoneDialog();
+    }
+
+    /**
+     * Show upload done dialog
+     */
+    private void showUploadDoneDialog() {
+        if (uploadDoneDialog == null) {
+            uploadDoneDialog = new Dialog(this);
+            uploadDoneDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            uploadDoneDialog.setContentView(R.layout.dialog_uploading_done);
+            uploadDoneDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            uploadDoneDialog.setCancelable(false);
+
+            ImageView closeIcon = uploadDoneDialog.findViewById(R.id.closeIcon);
+            closeIcon.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    uploadDoneDialog.dismiss();
+                }
+            });
+        }
+
+        uploadDoneDialog.show();
+    }
+
+    /**
+     * Handle upload error
+     */
+    private void handleUploadError(String errorMessage) {
+        Log.e(TAG, "Upload error: " + errorMessage);
+
+        uiHandler.post(() -> {
+            // Hide upload dialog
+            if (uploadDialog != null && uploadDialog.isShowing()) {
+                uploadDialog.dismiss();
+            }
+
+            // Reset uploading flag
+            isUploading = false;
+
+            // Update button to Resume
+            uploadBtn.setText("Resume");
+
+            // Show error message
+            Toast.makeText(MediaManagerActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+        });
+    }
+
+    /**
+     * Handle upload cancellation
+     */
+    private void handleUploadCancelled() {
+        Log.d(TAG, "Upload cancelled at photo " + (currentUploadIndex + 1));
+
+        uiHandler.post(() -> {
+            // Hide upload dialog
+            if (uploadDialog != null && uploadDialog.isShowing()) {
+                uploadDialog.dismiss();
+            }
+
+            // Reset uploading flag
+            isUploading = false;
+
+            // Update button to Resume
+            uploadBtn.setText("Resume");
+
+            Toast.makeText(MediaManagerActivity.this, "Upload cancelled. Press Resume to continue.", Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    /**
+     * Override back button to prevent navigation during upload
+     */
+    @Override
+    public void onBackPressed() {
+        if (isUploading) {
+            Toast.makeText(this, "Cannot go back while uploading. Press Cancel to stop upload.", Toast.LENGTH_SHORT).show();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    /**
+     * Block hardware back button during upload
+     */
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK && isUploading) {
+            Toast.makeText(this, "Cannot go back while uploading. Press Cancel to stop upload.", Toast.LENGTH_SHORT).show();
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
     }
 
     /**

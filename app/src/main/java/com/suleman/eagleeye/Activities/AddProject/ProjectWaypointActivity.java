@@ -32,6 +32,7 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import com.suleman.eagleeye.Activities.WaypointActivity;
 import com.suleman.eagleeye.ApiResponse.AddProjectResponse;
 import com.suleman.eagleeye.R;
 import com.suleman.eagleeye.Retrofit.ApiClient;
@@ -827,6 +828,7 @@ public class ProjectWaypointActivity extends AppCompatActivity implements OnMapR
                     hideLoading();
                     if (response.isSuccessful() && response.body() != null) {
                         Toast.makeText(ProjectWaypointActivity.this, "Waypoints info saved successfully", Toast.LENGTH_SHORT).show();
+                        project = response.body().project;
                         navigateToNextScreen();
                     } else {
                         Toast.makeText(ProjectWaypointActivity.this, "Error saving waypoints", Toast.LENGTH_SHORT).show();
@@ -841,8 +843,6 @@ public class ProjectWaypointActivity extends AppCompatActivity implements OnMapR
                     Log.e(TAG, "Waypoints API call error: " + t.getMessage());
                 }
             });
-            // Navigate to next screen
-            navigateToNextScreen();
 
         } catch (Exception e) {
             hideLoading();
@@ -853,13 +853,11 @@ public class ProjectWaypointActivity extends AppCompatActivity implements OnMapR
 
     private void navigateToNextScreen() {
         try {
-            // Navigate to flight activity or back to project list
-            // Intent intent = new Intent(this, FlightActivity.class);
-            // intent.putExtra("project", project);
-            // startActivity(intent);
-            // finish();
-
-            Toast.makeText(this, "Ready to start mission", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Project updated successfully.", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(this, WaypointActivity.class);
+            intent.putExtra("project", project);
+            startActivity(intent);
+            ActivityCollector.finishLastN(3); // closes last 4 activities
         } catch (Exception e) {
             Log.e(TAG, "Error navigating: " + e.getMessage());
         }

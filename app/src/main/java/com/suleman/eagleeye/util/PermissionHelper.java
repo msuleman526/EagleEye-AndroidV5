@@ -56,10 +56,6 @@ public class PermissionHelper {
     private static void requestManageExternalStoragePermission(Activity activity) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (!Environment.isExternalStorageManager()) {
-                Toast.makeText(activity, 
-                    "Storage permission required to save KMZ files", 
-                    Toast.LENGTH_LONG).show();
-                    
                 try {
                     Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
                     intent.setData(Uri.parse("package:" + activity.getPackageName()));
@@ -82,9 +78,6 @@ public class PermissionHelper {
             
             if (ActivityCompat.shouldShowRequestPermissionRationale(activity, 
                     Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                Toast.makeText(activity, 
-                    "Storage permission is required to save KMZ files to Downloads folder", 
-                    Toast.LENGTH_LONG).show();
             }
             
             ActivityCompat.requestPermissions(activity,
@@ -106,12 +99,8 @@ public class PermissionHelper {
             case STORAGE_PERMISSION_REQUEST_CODE:
                 if (grantResults.length > 0 && 
                     grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(activity, "Storage permission granted", Toast.LENGTH_SHORT).show();
                     return true;
                 } else {
-                    Toast.makeText(activity, 
-                        "Storage permission denied. KMZ files cannot be saved to Downloads folder.", 
-                        Toast.LENGTH_LONG).show();
                     return false;
                 }
                 
@@ -137,8 +126,6 @@ public class PermissionHelper {
      * Show storage permission explanation dialog
      */
     public static void showStoragePermissionExplanation(Activity activity) {
-        Toast.makeText(activity, 
-            "EagleEye needs storage permission to save KMZ waypoint files to your Downloads folder for easy access.", 
-            Toast.LENGTH_LONG).show();
+
     }
 }

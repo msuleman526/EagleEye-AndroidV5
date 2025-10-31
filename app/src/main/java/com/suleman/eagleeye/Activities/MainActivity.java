@@ -5,8 +5,12 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import androidx.core.content.ContextCompat;
@@ -14,8 +18,10 @@ import androidx.core.content.ContextCompat;
 import com.suleman.eagleeye.Fragments.ProjectDialogFragment;
 import com.suleman.eagleeye.R;
 import com.suleman.eagleeye.Services.ConnectionStateManager;
+import com.suleman.eagleeye.Services.TelemetryService;
 import com.suleman.eagleeye.models.MSDKInfoVm;
 import com.suleman.eagleeye.models.MSDKManagerVM;
+import com.suleman.eagleeye.util.TelemetryDisplayManager;
 
 import dji.sdk.keyvalue.value.product.ProductType;
 
@@ -44,6 +50,10 @@ public class MainActivity extends DJIMainActivity {
     private ProductType currentProductType = ProductType.UNKNOWN;
     private String currentDroneName = "No Drone Connected";
 
+    private PopupWindow menuPopupWindow;
+    private TelemetryDisplayManager telemetryDisplayManager;
+    private TelemetryService telemetryService;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,6 +62,8 @@ public class MainActivity extends DJIMainActivity {
         msdkInfoVm = getGlobalViewModelStore().get("MSDKInfoVm", MSDKInfoVm.class);
 
         initializeUI();
+        initializeTelemetryService();
+        initializeDisplayManagers();
         observeSDKStates();
         observeProductTypeChanges();
     }
@@ -120,6 +132,13 @@ public class MainActivity extends DJIMainActivity {
                 //startActivity(new Intent(MainActivity.this, WaypointActivity.class));
                 ProjectDialogFragment dialogFragment = new ProjectDialogFragment();
                 dialogFragment.show(getSupportFragmentManager(), "ProjectDialog");
+            }
+        });
+
+        findViewById(R.id.drawerMenu).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showPopupMenu(view);
             }
         });
     }
@@ -289,6 +308,158 @@ public class MainActivity extends DJIMainActivity {
                     msdkInfoVm.forceProductTypeRefresh();
                 }
             });
+        }
+    }
+
+    /**
+     * Show popup menu below drawerMenu button
+     */
+    private void showPopupMenu(View anchorView) {
+        // Dismiss existing popup if showing
+        if (menuPopupWindow != null && menuPopupWindow.isShowing()) {
+            menuPopupWindow.dismiss();
+            return;
+        }
+
+        // Inflate popup menu layout
+        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+        View popupView = inflater.inflate(R.layout.popup_menu, null);
+
+        // Create popup window
+        menuPopupWindow = new PopupWindow(
+                popupView,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                true // focusable
+        );
+
+        // Set transparent background to enable dismiss on outside touch
+        menuPopupWindow.setBackgroundDrawable(ContextCompat.getDrawable(this, android.R.color.transparent));
+        menuPopupWindow.setOutsideTouchable(true);
+
+        // Setup menu item click listeners
+        LinearLayout uploadPhotosBtn = popupView.findViewById(R.id.uploadPhotosBtn);
+        LinearLayout droneSettingBtn = popupView.findViewById(R.id.droneSettingBtn);
+        LinearLayout addProjectItem = popupView.findViewById(R.id.addProjectItem);
+        LinearLayout fpvModeItem = popupView.findViewById(R.id.fpvModeItem);
+
+        uploadPhotosBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                menuPopupWindow.dismiss();
+                // Open ProjectDialogFragment in upload photos mode
+                ProjectDialogFragment dialogFragment = ProjectDialogFragment.newInstanceForUploadPhotos();
+                dialogFragment.show(getSupportFragmentManager(), "UploadPhotosDialog");
+            }
+        });
+
+        droneSettingBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                menuPopupWindow.dismiss();
+                // TODO: Handle drone settings
+                Log.d(TAG, "Drone Settings clicked");
+            }
+        });
+
+        addProjectItem.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                menuPopupWindow.dismiss();
+                // Open normal project dialog
+                ProjectDialogFragment dialogFragment = new ProjectDialogFragment();
+                dialogFragment.show(getSupportFragmentManager(), "ProjectDialog");
+            }
+        });
+
+        fpvModeItem.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                menuPopupWindow.dismiss();
+                startActivity(new Intent(MainActivity.this, FPVCameraActivity.class));
+            }
+        });
+
+        // Calculate position to show popup below drawerMenu
+        int[] location = new int[2];
+        anchorView.getLocationOnScreen(location);
+
+        // Show popup below the anchor view with right margin
+        // X offset: -16dp (negative to move left from right edge)
+        int rightMarginPx = (int) (16 * getResources().getDisplayMetrics().density);
+        menuPopupWindow.showAsDropDown(anchorView, -rightMarginPx, 0, Gravity.END);
+
+        Log.d(TAG, "Popup menu shown");
+    }
+
+    /**
+     * Initialize TelemetryService
+     */
+    private void initializeTelemetryService() {
+        try {
+            Log.d(TAG, "Initializing TelemetryService...");
+
+            // Initialize TelemetryService (singleton pattern, not Android Service)
+            telemetryService = TelemetryService.getInstance(this);
+            telemetryService.initializeTelemetryService();
+
+            Log.d(TAG, "TelemetryService initialized successfully");
+        } catch (Exception e) {
+            Log.e(TAG, "Error initializing TelemetryService: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Initialize Display Managers
+     */
+    private void initializeDisplayManagers() {
+        try {
+            Log.d(TAG, "Initializing display managers...");
+
+            // Create display manager
+            telemetryDisplayManager = new TelemetryDisplayManager(this, "MainActivity");
+
+            // Initialize TelemetryDisplayManager UI components from telemetry_view.xml
+            TextView flightModeText = findViewById(R.id.flightModeText);
+            TextView satelliteCountText = findViewById(R.id.satelliteCountText);
+            TextView batteryText = findViewById(R.id.batteryText);
+            TextView remoteSignalText = findViewById(R.id.remoteSignalText);
+            ImageView droneIcon = findViewById(R.id.droneIcon);
+            ImageView satelliteIcon = findViewById(R.id.satelliteIcon);
+            ImageView gpsSignalIcon = findViewById(R.id.gpsSignalIcon);
+            ImageView batteryIcon = findViewById(R.id.batteryIcon);
+            ImageView remoteIcon = findViewById(R.id.remoteIcon);
+            ImageView remoteSignalIcon = findViewById(R.id.remoteSignalIcon);
+
+            telemetryDisplayManager.initializeComponents(
+                flightModeText, satelliteCountText, batteryText, remoteSignalText,
+                droneIcon, satelliteIcon, gpsSignalIcon, batteryIcon, remoteIcon, remoteSignalIcon
+            );
+
+            // Setup telemetry services
+            if (telemetryService != null) {
+                telemetryDisplayManager.setupTelemetryServices(telemetryService);
+            }
+
+            Log.d(TAG, "Display managers initialized successfully");
+
+        } catch (Exception e) {
+            Log.e(TAG, "Error initializing display managers: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        // Cleanup telemetry display manager
+        if (telemetryDisplayManager != null) {
+            telemetryDisplayManager.cleanup();
+        }
+
+        // Dismiss popup if showing
+        if (menuPopupWindow != null && menuPopupWindow.isShowing()) {
+            menuPopupWindow.dismiss();
         }
     }
 }
