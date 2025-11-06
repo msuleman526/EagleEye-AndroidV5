@@ -4,13 +4,42 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <fragment
-        android:id="@+id/mapFragment"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
+    <!-- Main Map Container (Full Screen by default) -->
+    <FrameLayout
+        android:id="@+id/mapContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <fragment
+            android:id="@+id/mapFragment"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#FFFFFF"/>
+
+        <!-- Plus icon for expanding map (shown when map is small) -->
+        <ImageView
+            android:id="@+id/mapExpandIcon"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="top|start"
+            android:layout_margin="5dp"
+            android:background="@drawable/shape_button"
+            android:padding="5dp"
+            android:src="@drawable/ic_expand_fullscreen"
+            android:elevation="10dp"
+            android:visibility="gone"
+            app:tint="@color/main_color" />
+
+    </FrameLayout>
+
+    <!-- Main Camera Container (Full Screen but hidden by default) -->
+    <FrameLayout
+        android:id="@+id/cameraMainContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:background="#FFFFFF"/>
+        android:background="@color/black"
+        android:visibility="gone"/>
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -56,11 +85,11 @@
     </RelativeLayout>
 
     <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="40dp"
+        android:layout_width="77dp"
+        android:layout_height="41dp"
+        android:layout_alignParentRight="true"
         android:layout_marginTop="43dp"
-        android:layout_marginRight="5dp"
-        android:layout_alignParentRight="true">
+        android:layout_marginRight="11dp">
 
         <ImageView
             android:id="@+id/btn_current_location"
@@ -68,19 +97,19 @@
             android:layout_height="40dp"
             android:layout_marginRight="3dp"
             android:background="@drawable/dark_buttons_background"
-            android:src="@drawable/current"
             android:padding="4dp"
+            android:src="@drawable/current"
             app:tint="@color/main_color" />
 
         <ImageView
             android:id="@+id/btn_media_manager"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            app:tint="@color/main_color"
             android:layout_toRightOf="@+id/btn_current_location"
             android:background="@drawable/dark_buttons_background"
+            android:padding="5dp"
             android:src="@drawable/media"
-            android:padding="7dp"/>
+            app:tint="@color/main_color" />
 
     </RelativeLayout>
 
@@ -105,24 +134,40 @@
             android:id="@+id/btn_project_list"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            app:tint="@color/main_color"
             android:layout_toRightOf="@+id/btn_mission_setting"
             android:background="@drawable/dark_buttons_background"
+            android:padding="5dp"
             android:src="@drawable/project_list"
-            android:padding="3dp"/>
+            app:tint="@color/main_color" />
+
+        <ImageView
+            android:id="@+id/btn_manual_waypoint"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_toRightOf="@+id/btn_project_list"
+            android:layout_marginLeft="3dp"
+            android:background="@drawable/dark_buttons_background"
+            android:padding="5dp"
+            android:src="@drawable/map_marker"
+            android:visibility="gone"
+            app:tint="@color/main_color" />
 
     </RelativeLayout>
 
-    <RelativeLayout
+    <TextView
+        android:id="@+id/manualModeInstructionText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="5dp"
-        android:layout_marginBottom="10dp"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true">
-
-        <include layout="@layout/speed_view"/>
-    </RelativeLayout>
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="10dp"
+        android:layout_marginBottom="120dp"
+        android:padding="8dp"
+        android:background="@drawable/dark_buttons_background"
+        android:text="Tap to draw POI"
+        android:textColor="@color/main_color"
+        android:textStyle="bold"
+        android:visibility="gone"/>
 
     <TextView
         android:id="@+id/statusTextView"
@@ -135,6 +180,18 @@
         android:padding="5dp"
         android:background="@drawable/dark_buttons_background"
         android:text="show"/>
+
+    <RelativeLayout
+        android:id="@+id/telemetryView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="5dp"
+        android:layout_marginBottom="10dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true">
+
+        <include layout="@layout/speed_view"/>
+    </RelativeLayout>
 
     <RelativeLayout
         android:layout_width="wrap_content"
@@ -197,11 +254,38 @@
 
     </RelativeLayout>
 
+    <!-- PiP Camera Container (Small, bottom-right by default) -->
     <FrameLayout
         android:id="@+id/cameraFeedContainer"
-        android:layout_width="200dp"
+        android:layout_width="230dp"
+        android:layout_height="140dp"
+        android:background="@drawable/secondary_gradient_background"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true">
+
+        <!-- Plus icon for expanding camera (shown when camera is small) -->
+        <ImageView
+            android:id="@+id/cameraExpandIcon"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="top|start"
+            android:layout_margin="5dp"
+            android:background="@drawable/shape_button"
+            android:padding="5dp"
+            android:src="@drawable/ic_expand_fullscreen"
+            android:elevation="10dp"
+            app:tint="@color/main_color" />
+
+    </FrameLayout>
+
+    <!-- PiP Map Container (Small, bottom-right, hidden by default) -->
+    <FrameLayout
+        android:id="@+id/mapPiPContainer"
+        android:layout_width="230dp"
+        android:layout_height="140dp"
         android:background="@drawable/secondary_gradient_background"
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
-        android:layout_height="130dp"/>
+        android:visibility="gone"/>
+
 </RelativeLayout>

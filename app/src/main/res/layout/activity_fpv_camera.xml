@@ -11,108 +11,120 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- Left Side Controls Container -->
-    <LinearLayout
-        android:id="@+id/leftControlsContainer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_centerVertical="true"
-        android:layout_marginStart="20dp"
-        android:layout_marginLeft="20dp"
-        android:orientation="vertical"
-        android:gravity="center">
+    <!-- Top Bar -->
+    <RelativeLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="38dp"
+        android:layout_alignParentTop="true"
+        android:background="@color/background_main">
 
-        <!-- Take Off / Land Button -->
-        <Button
-            android:id="@+id/btnTakeOffLand"
-            android:layout_width="120dp"
-            android:layout_height="60dp"
-            android:text="TAKE OFF"
-            android:textSize="14sp"
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/backBtn"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="5dp"
+            android:padding="5dp"
+            android:src="@drawable/back"
+            app:tint="@color/text_primary"/>
+
+        <ImageView
+            android:id="@+id/connectionBar"
+            android:layout_width="314dp"
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true"
+            android:src="@drawable/disconnected_bar" />
+
+        <TextView
+            android:id="@+id/connectionTxt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:gravity="center"
+            android:text="Not Connected"
+            android:textColor="@color/text_primary"
             android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:background="@color/background_blue"
-            android:elevation="8dp" />
+            android:visibility="gone" />
 
-    </LinearLayout>
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="20dp">
+
+            <include layout="@layout/telemetry_view" />
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/btnTakeOffLand"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="20dp"
+        android:src="@drawable/takeoff"
+        android:background="@drawable/buttons_round"
+        app:tint="@color/text_primary" />
 
     <!-- Right Side Controls Container -->
     <LinearLayout
         android:id="@+id/rightControlsContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
+        android:layout_alignParentRight="true"
         android:layout_marginEnd="20dp"
-        android:layout_marginRight="20dp"
         android:orientation="vertical"
         android:gravity="center"
         android:padding="16dp"
-        android:background="@color/background_blue"
         android:elevation="8dp">
 
-        <!-- Camera Mode Label -->
-        <TextView
-            android:id="@+id/tvCameraMode"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="PHOTO"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:layout_marginBottom="12dp" />
-
         <!-- Photo / Video Mode Switch -->
-        <LinearLayout
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchCameraMode"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:layout_marginBottom="20dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Photo"
-                android:textSize="12sp"
-                android:textColor="#FFFFFF"
-                android:layout_marginEnd="8dp"
-                android:layout_marginRight="8dp" />
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switchCameraMode"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="false"
-                android:theme="@color/background_blue" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Video"
-                android:textSize="12sp"
-                android:textColor="#FFFFFF"
-                android:layout_marginStart="8dp"
-                android:layout_marginLeft="8dp" />
-
-        </LinearLayout>
+            android:checked="false"
+            app:thumbTint="@color/text_primary"
+            app:trackTint="@color/background_main" />
 
         <!-- Capture Button (Photo / Start Recording) -->
-        <ImageButton
+        <ImageView
             android:id="@+id/btnCapture"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:src="@android:drawable/ic_menu_camera"
-            android:background="@color/background_blue"
-            android:scaleType="centerInside"
-            android:padding="16dp"
-            android:layout_marginBottom="16dp"
-            android:contentDescription="Capture Photo or Start Recording" />
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/camera"
+            android:visibility="visible"
+            android:background="@drawable/buttons_round"
+            android:padding="10dp"
+            android:layout_marginBottom="16dp" />
 
-        <!-- Recording Timer -->
+        <!-- Flip Camera Button (Landscape / Portrait) -->
+        <ImageView
+            android:id="@+id/btnFlipCamera"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/flip_camera"
+            android:background="@drawable/buttons_round"
+            android:padding="10dp"
+            android:layout_marginBottom="16dp"
+            app:tint="@color/main_color" />
+
+        <ImageButton
+            android:id="@+id/btnStopRecording"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/record"
+            android:layout_gravity="center"
+            android:background="@drawable/buttons_round"
+            android:scaleType="centerInside"
+            android:padding="8dp"
+            android:visibility="gone"
+            android:contentDescription="Stop Recording" />
+
+
         <TextView
             android:id="@+id/tvRecordingTimer"
             android:layout_width="wrap_content"
@@ -123,19 +135,6 @@
             android:textColor="#FF0000"
             android:layout_marginBottom="16dp"
             android:visibility="gone" />
-
-        <!-- Stop Recording Button -->
-        <ImageButton
-            android:id="@+id/btnStopRecording"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:src="@android:drawable/ic_media_pause"
-            android:background="@color/background_blue"
-            android:scaleType="centerInside"
-            android:padding="12dp"
-            android:visibility="gone"
-            android:contentDescription="Stop Recording" />
-
     </LinearLayout>
 
 </RelativeLayout>

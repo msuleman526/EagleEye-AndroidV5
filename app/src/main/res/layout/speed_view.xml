@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="165dp"
+    android:layout_width="155dp"
     android:orientation="vertical"
     android:background="@color/transparent"
     android:layout_height="65dp">
@@ -40,7 +40,7 @@
             android:layout_width="0dp"
             android:layout_height="30dp"
             android:layout_weight="5"
-            android:layout_marginLeft="10dp"
+            android:layout_marginLeft="5dp"
             android:background="@drawable/dark_buttons_background"
             android:orientation="horizontal">
 
@@ -100,7 +100,7 @@
             android:layout_width="0dp"
             android:layout_height="30dp"
             android:layout_weight="5"
-            android:layout_marginLeft="10dp"
+            android:layout_marginLeft="5dp"
             android:background="@drawable/dark_buttons_background"
             android:orientation="horizontal">
 

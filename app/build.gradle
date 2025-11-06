@@ -1,11 +1,11 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace 'com.suleman.eagleeye'
+    namespace 'com.empowerbits.dronifyit'
     compileSdkVersion Integer.parseInt(project.ANDROID_COMPILE_SDK_VERSION)
 
     defaultConfig {
-        applicationId "com.suleman.eagleeye"
+        applicationId "com.empowerbits.dronifyit"
         minSdkVersion Integer.parseInt(project.ANDROID_MIN_SDK_VERSION)
         targetSdkVersion Integer.parseInt(project.ANDROID_TARGET_SDK_VERSION)
         versionCode 2
@@ -132,6 +132,9 @@ dependencies {
     implementation 'com.github.bumptech.glide:glide:4.16.0'
     implementation 'com.github.mukeshsolanki:Google-Places-AutoComplete-EditText:0.0.8'
     implementation 'com.github.trinnguyen:Android-SegmentView:master-SNAPSHOT'
+
+    // Swipe Button for mission confirmation
+    implementation 'com.github.ebanx:swipe-button:0.8.3'
 
     // ExoPlayer for video playback
     implementation 'com.google.android.exoplayer:exoplayer:2.19.1'

@@ -1,11 +1,10 @@
-<!-- res/layout/popup_project.xml -->
+<!-- res/layout/popup_mission_setting.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="250dp"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:padding="12dp"
-    android:background="@drawable/secondary_gradient_curve">
+    android:background="@drawable/secondary_gradient_background">
 
     <TextView
         android:layout_width="match_parent"
@@ -14,42 +13,181 @@
         android:textStyle="bold"
         android:gravity="center"
         android:textSize="16dp"
+        android:padding="12dp"
         android:textColor="@color/text_primary"/>
 
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_marginTop="10dp"
-        android:padding="5dp">
+        android:padding="12dp">
 
+        <!-- Fly To Wayline Mode Segment -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/maxFlightSpeedLbl"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="@color/text_primary"
-                android:text="Flight Speed: 15.0m/s"/>
+                android:text="Fly To Wayline Mode"
+                android:textStyle="bold"/>
 
-            <SeekBar
-                android:id="@+id/maxFlightSlider"
-                android:layout_marginTop="3dp"
+            <com.trinnguyen.SegmentView
+                android:id="@+id/flyWaylineModeSegment"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:max="15"
-                android:progress="15"/>
+                android:layout_height="35dp"
+                android:layout_marginTop="5dp"
+                app:separateLineColor="#D6D6D9"
+                app:unselectedTextColor="@color/white"
+                app:selectedTextColor="@color/white"
+                app:unselectedBackgroundColor="#B3C8C7C7"
+                app:selectedBackgroundColor="@color/main_color"
+                app:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                app:numSegments="2"
+                app:selectedIndex="0"/>
 
         </LinearLayout>
 
+        <!-- Finish Action Spinner -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:text="Finish Action"
+                android:textStyle="bold"/>
+
+            <Spinner
+                android:id="@+id/finishActionSpinner"
+                android:layout_width="match_parent"
+                android:background="@drawable/edit_text_border"
+                android:layout_marginTop="5dp"
+                android:layout_height="35dp"/>
+
+        </LinearLayout>
+
+        <!-- Exit On RC Lost Behavior Segment -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:text="Exit On RC Lost Behavior"
+                android:textStyle="bold"/>
+
+            <com.trinnguyen.SegmentView
+                android:id="@+id/exitRCLostBehaviorSegment"
+                android:layout_width="match_parent"
+                android:layout_height="35dp"
+                android:layout_marginTop="5dp"
+                app:separateLineColor="#D6D6D9"
+                app:unselectedTextColor="@color/white"
+                app:selectedTextColor="@color/white"
+                app:unselectedBackgroundColor="#B3C8C7C7"
+                app:selectedBackgroundColor="@color/main_color"
+                app:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                app:numSegments="2"
+                app:selectedIndex="0"/>
+
+        </LinearLayout>
+
+        <!-- Execute RC Lost Action Spinner -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:text="Execute RC Lost Action"
+                android:textStyle="bold"/>
+
+            <Spinner
+                android:id="@+id/executeRCLostActionSpinner"
+                android:layout_width="match_parent"
+                android:background="@drawable/edit_text_border"
+                android:layout_marginTop="5dp"
+                android:layout_height="35dp"/>
+
+        </LinearLayout>
+
+        <!-- Take Off Height SeekBar (10-80 meters) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/takeOffHeightLbl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:text="Take Off Height: 50m"
+                android:textStyle="bold"/>
+
+            <SeekBar
+                android:id="@+id/takeOffHeightSlider"
+                android:layout_marginTop="5dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="70"
+                android:progress="40"/>
+
+        </LinearLayout>
+
+        <!-- Global Transitional Speed SeekBar (3-15 m/s) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/globalTransitionSpeedLbl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:text="Global Transitional Speed: 10.0 m/s"
+                android:textStyle="bold"/>
+
+            <SeekBar
+                android:id="@+id/globalTransitionSpeedSlider"
+                android:layout_marginTop="5dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="120"
+                android:progress="70"/>
+
+        </LinearLayout>
+
+        <!-- Auto Flight Speed SeekBar (3-15 m/s) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:orientation="vertical">
 
             <TextView
@@ -57,45 +195,24 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="@color/text_primary"
-                android:text="Auto Flight Speed: 5.0m/s"/>
+                android:text="Auto Flight Speed: 8.0 m/s"
+                android:textStyle="bold"/>
 
             <SeekBar
-                android:id="@+id/autoFlightSlider"
-                android:layout_marginTop="3dp"
+                android:id="@+id/autoFlightSpeedSlider"
+                android:layout_marginTop="5dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:max="14"
-                android:progress="4"/>
+                android:max="120"
+                android:progress="50"/>
 
         </LinearLayout>
 
+        <!-- POI Height SeekBar (2-10 meters) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/repeatTimesLbl"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:text="Repeat Time: 0"/>
-
-            <SeekBar
-                android:id="@+id/repeatTimeSlider"
-                android:layout_marginTop="3dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:max="1"
-                android:progress="0"/>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="10dp"
             android:orientation="vertical">
 
             <TextView
@@ -103,171 +220,48 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="@color/text_primary"
-                android:text="POI Height: 4.0m"/>
+                android:text="POI Height: 4.0 m"
+                android:textStyle="bold"/>
 
             <SeekBar
                 android:id="@+id/poiHeightSlider"
-                android:layout_marginTop="3dp"
+                android:layout_marginTop="5dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:max="99"
-                android:progress="3"/>
+                android:max="80"
+                android:progress="20"/>
 
         </LinearLayout>
 
+        <!-- Height Mode Spinner -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="10dp"
             android:orientation="vertical">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="@color/text_primary"
-                android:text="Rotate Gimbal Pitch"/>
-
-            <com.trinnguyen.SegmentView
-                android:id="@+id/gimbalSegmentation"
-                android:layout_width="match_parent"
-                android:layout_height="35dp"
-                app:separateLineColor="#D6D6D9"
-                app:unselectedTextColor="@color/white"
-                app:selectedTextColor="@color/white"
-                app:unselectedBackgroundColor="#B3C8C7C7"
-                app:selectedBackgroundColor="@color/main_color"
-                app:textAppearance="@style/TextAppearance.AppCompat.Body1"
-                app:numSegments="2"
-                app:selectedIndex="1"/>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:text="Exit on RC Connection Lost"/>
-
-            <com.trinnguyen.SegmentView
-                android:id="@+id/exitSegmentation"
-                android:layout_width="match_parent"
-                android:layout_height="35dp"
-                app:separateLineColor="#D6D6D9"
-                app:unselectedTextColor="@color/white"
-                app:selectedTextColor="@color/white"
-                app:unselectedBackgroundColor="#B3C8C7C7"
-                app:selectedBackgroundColor="@color/main_color"
-                app:textAppearance="@style/TextAppearance.AppCompat.Body1"
-                app:numSegments="2"
-                app:selectedIndex="1"/>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:text="Go to First Waypoint"/>
-
-            <com.trinnguyen.SegmentView
-                android:id="@+id/firstWaypointSegment"
-                android:layout_width="match_parent"
-                android:layout_height="35dp"
-                app:separateLineColor="#D6D6D9"
-                app:unselectedTextColor="@color/white"
-                app:selectedTextColor="@color/white"
-                app:unselectedBackgroundColor="#B3C8C7C7"
-                app:selectedBackgroundColor="@color/main_color"
-                app:textAppearance="@style/TextAppearance.AppCompat.Body1"
-                app:numSegments="2"
-                app:selectedIndex="1"/>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:text="Flight Path Mode"/>
-
-            <com.trinnguyen.SegmentView
-                android:id="@+id/flightPathModeSegment"
-                android:layout_width="match_parent"
-                android:layout_height="35dp"
-                app:separateLineColor="#D6D6D9"
-                app:unselectedTextColor="@color/white"
-                app:selectedTextColor="@color/white"
-                app:unselectedBackgroundColor="#B3C8C7C7"
-                app:selectedBackgroundColor="@color/main_color"
-                app:textAppearance="@style/TextAppearance.AppCompat.Body1"
-                app:numSegments="2"
-                app:selectedIndex="1"/>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:text="Finish Action"/>
+                android:text="Height Mode"
+                android:textStyle="bold"/>
 
             <Spinner
-                android:id="@+id/finishActionSpinner"
+                android:id="@+id/heightModeSpinner"
                 android:layout_width="match_parent"
                 android:background="@drawable/edit_text_border"
+                android:layout_marginTop="5dp"
                 android:layout_height="35dp"/>
 
         </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:text="Heading Mode"/>
-
-            <Spinner
-                android:id="@+id/headingModeSpinner"
-                android:layout_width="match_parent"
-                android:background="@drawable/edit_text_border"
-                android:layout_height="35dp"/>
-
-        </LinearLayout>
-
+        <!-- Buttons -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:weightSum="10"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="20dp"
             android:orientation="horizontal">
 
             <Button
@@ -292,5 +286,7 @@
         </LinearLayout>
 
     </LinearLayout>
+
+    </ScrollView>
 
 </LinearLayout>

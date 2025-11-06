@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="320dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/secondary_gradient_curve"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Start Mission"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:textSize="20sp"
+        android:textColor="@color/text_primary"
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Do you want to start the mission?"
+        android:gravity="center"
+        android:textSize="16sp"
+        android:textColor="@color/text_primary"
+        android:layout_marginBottom="24dp"/>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@drawable/rounded_swipe_button_background">
+
+        <com.ebanx.swipebtn.SwipeButton
+            android:id="@+id/swipeButton"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            app:inner_text="Swipe to Start"
+            app:inner_text_color="@color/black"
+            app:inner_text_size="16sp"
+            app:button_image_disabled="@drawable/ic_arrow_forward"
+            app:button_image_enabled="@drawable/ic_arrow_forward"
+            app:initial_state="disabled"
+            app:has_activate_state="true"
+            app:button_image_height="60dp"
+            app:button_background="@drawable/swipe_button"
+            app:button_trail_enabled="true"
+            app:inner_text_background="@drawable/rounded_swipe_button_background"
+            app:inner_text_top_padding="14dp"
+            app:inner_text_bottom_padding="14dp"
+            app:button_left_padding="12dp"
+            app:button_right_padding="12dp"
+            app:button_top_padding="12dp"
+            app:button_bottom_padding="12dp"/>
+
+    </FrameLayout>
+
+    <Button
+        android:id="@+id/cancelButton"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Cancel"
+        android:textColor="@color/text_primary"
+        android:background="@drawable/rounded_cancel_button"
+        android:layout_marginTop="12dp"/>
+
+</LinearLayout>
