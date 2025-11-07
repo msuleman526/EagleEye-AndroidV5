@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/nfzInfoPanel"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_alignParentBottom="true"
+    android:layout_alignParentEnd="true"
+    android:layout_alignParentRight="true"
+    android:layout_marginEnd="12dp"
+    android:layout_marginRight="12dp"
+    android:layout_marginBottom="120dp"
+    android:background="@drawable/secondary_gradient_curve"
+    android:padding="12dp"
+    android:elevation="8dp"
+    android:visibility="gone">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- NFZ Header -->
+        <TextView
+            android:id="@+id/nfzHeaderText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⚠️ NO-FLY ZONE"
+            android:textColor="@color/text_primary"
+            android:textStyle="bold"
+            android:textSize="12sp"
+            android:layout_marginBottom="8dp" />
+
+        <!-- NFZ Name -->
+        <TextView
+            android:id="@+id/nfzNameText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Zone Name"
+            android:textColor="@color/text_primary"
+            android:textSize="11sp"
+            android:layout_marginBottom="6dp"
+            android:ellipsize="end"
+            android:maxLines="2" />
+
+        <!-- NFZ Level with Color Indicator -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="6dp">
+
+            <View
+                android:id="@+id/nfzColorIndicator"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/shape_button" />
+
+            <TextView
+                android:id="@+id/nfzLevelText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Restriction Level"
+                android:textColor="@color/text_primary"
+                android:textSize="10sp" />
+        </LinearLayout>
+
+        <!-- NFZ Affected Waypoints -->
+        <TextView
+            android:id="@+id/nfzAffectedWaypoints"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Waypoints in zone: 0"
+            android:textColor="#FFEB3B"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone" />
+
+        <!-- Unlock Button -->
+        <Button
+            android:id="@+id/btnUnlockNFZ"
+            android:layout_width="match_parent"
+            android:layout_height="32dp"
+            android:text="Unlock Zone"
+            android:textSize="10sp"
+            android:textColor="@android:color/white"
+            android:background="@drawable/shape_button"
+            android:visibility="gone" />
+
+        <!-- Unlock All Enhanced Warnings Button -->
+        <Button
+            android:id="@+id/btnUnlockAllEnhancedWarnings"
+            android:layout_width="match_parent"
+            android:layout_height="32dp"
+            android:text="Unlock All Enhanced Warnings"
+            android:textSize="9sp"
+            android:textColor="@android:color/white"
+            android:background="@drawable/primary_button"
+            android:layout_marginTop="6dp"
+            android:visibility="visible" />
+    </LinearLayout>
+
+</RelativeLayout>

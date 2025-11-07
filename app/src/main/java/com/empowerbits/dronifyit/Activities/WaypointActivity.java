@@ -14,6 +14,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.location.Location;
@@ -25,6 +26,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -61,7 +63,12 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.Polygon;
+import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import com.empowerbits.dronifyit.Fragments.CameraFeedFragment;
 import com.empowerbits.dronifyit.Fragments.ProjectDialogFragment;
@@ -84,6 +91,8 @@ import com.empowerbits.dronifyit.util.SessionUtils;
 import com.empowerbits.dronifyit.util.SpeedDisplayManager;
 import com.empowerbits.dronifyit.util.TelemetryDisplayManager;
 import com.empowerbits.dronifyit.util.UserSessionManager;
+
+import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -163,6 +172,26 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
     private ImageView cameraExpandIcon;
     private ImageView mapExpandIcon;
     private boolean isCameraFullScreen = false;
+
+    // NFZ Management
+    private com.empowerbits.dronifyit.util.NFZManager nfzManager;
+    private RelativeLayout nfzInfoPanel;
+    private TextView nfzNameText;
+    private TextView nfzLevelText;
+    private View nfzColorIndicator;
+    private TextView nfzAffectedWaypoints;
+    private Button btnUnlockNFZ;
+    private List<Integer> waypointsInNFZ = new ArrayList<>();
+    private com.empowerbits.dronifyit.util.NFZManager.SimpleFlyZoneInfo currentNFZ;
+    private Runnable nfzCheckRunnable;
+    private long lastNFZCheckTime = 0;
+    private static final long NFZ_CHECK_DEBOUNCE_MS = 2000; // 2 seconds minimum between checks
+    private List<com.google.android.gms.maps.model.Polygon> nfzPolygons = new ArrayList<>();
+    private Map<com.google.android.gms.maps.model.Polygon, com.empowerbits.dronifyit.util.NFZManager.SimpleFlyZoneInfo> polygonToZoneMap = new HashMap<>();
+    private PopupWindow nfzWarningPopup;
+    private boolean isDroneInNFZ = false;
+    private long lastDroneNFZCheckTime = 0;
+    private static final long DRONE_NFZ_CHECK_INTERVAL = 5000; // Check every 5 seconds
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -327,22 +356,51 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
 
             // 4. Process non-grid flight
             double subjectPhotoHeight = currentProject.height_of_house + 45;
+            double horizonPathHeight = currentProject.height_of_house + 15;
             List<FlightAddress> flightPath = currentProject.getWaypointList();
             double maxObstacleHeight = maxHeight + 10;
 
             if (!flightPath.isEmpty()) {
                 double[] heights = {150, subjectPhotoHeight,
                         maxObstacleHeight};
+
                 for (int i = 0; i < heights.length; i++) {
                     double height = heights[i];
                     drawWaypoint(Double.parseDouble(currentProject.latitude), Double.parseDouble(currentProject.longitude), currentProject, height);
                 }
 
+                boolean containsInnerPath = false;
+                int noOfInnerCircle = 10;
+                if (currentProject.flight_setting != null) {
+                    String flightSettingStr = currentProject.getFlightSettingAsString();
+                    if (flightSettingStr != null && !flightSettingStr.isEmpty() && !flightSettingStr.equals("null")) {
+                        try {
+                            JSONObject flightSettings = new JSONObject(flightSettingStr);
+                            if (flightSettings.has("noOfWaypoints")) {
+                                if(flightPath.size() > (flightSettings.getInt("noOfWaypoints"))){
+                                    containsInnerPath = true;
+                                }
+                            }
+                            if (flightSettings.has("smallCircleRadius")) {
+                                noOfInnerCircle = flightSettings.getInt("smallCircleRadius");
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error parsing flight settings: " + e.getMessage());
+                        }
+                    }
+                }
+
                 // 4. Process remaining waypoints with maxObstacleHeight
-                for (int i = 1; i < flightPath.size(); i++) {
+                for (int i = 0; i < flightPath.size(); i++) {
                     FlightAddress waypoint = flightPath.get(i);
+                    double height = maxObstacleHeight;
+                    if(containsInnerPath){
+                        if(i < noOfInnerCircle){
+                            height = horizonPathHeight;
+                        }
+                    }
                     drawWaypoint(waypoint.lat, waypoint.lng,
-                            currentProject, maxObstacleHeight);
+                            currentProject, height);
                 }
             }
         }
@@ -407,6 +465,9 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
             waypointsList.add(waypointSetting);
             SessionUtils.saveWaypoints(waypointsList);
             updateWaypointPolyline();
+
+            // Check NFZ after adding waypoint
+            checkWaypointsForNFZ();
         } catch (Exception e) {
             showMessage("Error creating waypoint: " + e.getMessage());
         }
@@ -579,6 +640,9 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
 
         setupButtonListeners();
         updateStatus("Ready to start mission");
+
+        // Initialize NFZ panel
+        initializeNFZPanel();
     }
     
     /**
@@ -586,8 +650,14 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
      */
     private void setupButtonListeners() {
         startMissionButton.setOnClickListener(v -> {
-            // Show mission start confirmation popup
-            showMissionStartConfirmationPopup();
+            // Check for NFZ first, then show appropriate popup
+            if (!waypointsInNFZ.isEmpty() && currentNFZ != null) {
+                // Show NFZ warning popup first
+                showNFZWarningPopup();
+            } else {
+                // No NFZ, proceed directly to mission confirmation
+                showMissionStartConfirmationPopup();
+            }
         });
         
         stopMissionButton.setOnClickListener(v -> {
@@ -765,6 +835,8 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
 
         if (homeLocation != null) {
             updateMapWithHomeLocation();
+            // Load NFZ polygons for home location
+            loadNFZPolygons(homeLocation);
         }
         if(currentProject != null) {
             setUpCurrentProject();
@@ -865,10 +937,139 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
             droneMarker.setRotation(currentDroneHeading.floatValue());
         }
 
+        // Check if drone is in NFZ (throttled to avoid excessive checks)
+        checkDroneLocationForNFZ(dronePosition);
+
 //        // Optionally move camera to follow drone during mission
 //        if (missionInProgress) {
 //            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(dronePosition, 18));
 //        }
+    }
+
+    /**
+     * Check if drone's current location is in an NFZ
+     */
+    private void checkDroneLocationForNFZ(LatLng droneLocation) {
+        // Throttle checks to avoid excessive processing
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastDroneNFZCheckTime < DRONE_NFZ_CHECK_INTERVAL) {
+            return;
+        }
+        lastDroneNFZCheckTime = currentTime;
+
+        if (nfzManager == null || droneLocation == null) return;
+
+        // Get all fly zones at drone's location
+        nfzManager.getFlyZonesForVisualization(droneLocation, new com.empowerbits.dronifyit.util.NFZManager.FlyZonesCallback() {
+            @Override
+            public void onFlyZonesRetrieved(List<com.empowerbits.dronifyit.util.NFZManager.SimpleFlyZoneInfo> zones) {
+                boolean droneInNFZ = false;
+                com.empowerbits.dronifyit.util.NFZManager.SimpleFlyZoneInfo detectedZone = null;
+
+                // Check if drone is inside any NFZ polygon
+                for (com.empowerbits.dronifyit.util.NFZManager.SimpleFlyZoneInfo zone : zones) {
+                    if (zone.hasPolygons()) {
+                        for (List<LatLng> polygon : zone.polygons) {
+                            if (isPointInPolygon(droneLocation, polygon)) {
+                                droneInNFZ = true;
+                                detectedZone = zone;
+                                break;
+                            }
+                        }
+                    } else {
+                        // Check circular zone
+                        double distance = com.empowerbits.dronifyit.util.NFZManager.calculateDistance(
+                                droneLocation.latitude, droneLocation.longitude,
+                                zone.latitude, zone.longitude);
+                        if (distance <= zone.radiusMeters) {
+                            droneInNFZ = true;
+                            detectedZone = zone;
+                            break;
+                        }
+                    }
+                    if (droneInNFZ) break;
+                }
+
+                // Show alert if drone entered NFZ
+                if (droneInNFZ && !isDroneInNFZ) {
+                    // Drone just entered NFZ
+                    isDroneInNFZ = true;
+                    showDroneInNFZAlert(detectedZone);
+                } else if (!droneInNFZ && isDroneInNFZ) {
+                    // Drone left NFZ
+                    isDroneInNFZ = false;
+                    runOnUiThread(() -> {
+                        Toast.makeText(WaypointActivity.this,
+                                "✅ Drone has left the no-fly zone",
+                                Toast.LENGTH_SHORT).show();
+                    });
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Error checking drone NFZ: " + error);
+            }
+        });
+    }
+
+    /**
+     * Point-in-polygon test (ray casting algorithm)
+     */
+    private boolean isPointInPolygon(LatLng point, List<LatLng> polygon) {
+        if (polygon == null || polygon.size() < 3) {
+            return false;
+        }
+
+        boolean inside = false;
+        int j = polygon.size() - 1;
+
+        for (int i = 0; i < polygon.size(); i++) {
+            LatLng vi = polygon.get(i);
+            LatLng vj = polygon.get(j);
+
+            if ((vi.longitude > point.longitude) != (vj.longitude > point.longitude)) {
+                double slope = (point.longitude - vj.longitude) * (vi.latitude - vj.latitude) -
+                        (vi.longitude - vj.longitude) * (point.latitude - vj.latitude);
+
+                if ((vi.longitude > vj.longitude && slope > 0) ||
+                        (vi.longitude <= vj.longitude && slope < 0)) {
+                    inside = !inside;
+                }
+            }
+
+            j = i;
+        }
+
+        return inside;
+    }
+
+    /**
+     * Show alert when drone enters NFZ
+     */
+    private void showDroneInNFZAlert(com.empowerbits.dronifyit.util.NFZManager.SimpleFlyZoneInfo zone) {
+        runOnUiThread(() -> {
+            String zoneName = zone != null && zone.name != null ? zone.name : "No-Fly Zone";
+            String category = zone != null && zone.category != null ? zone.category : "UNKNOWN";
+
+            String message = "⚠️ DRONE IS IN NO-FLY ZONE!\n\n" +
+                    "Zone: " + zoneName + "\n" +
+                    "Category: " + category + "\n\n" +
+                    "Please take immediate action.";
+
+            new androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("⚠️ No-Fly Zone Alert")
+                    .setMessage(message)
+                    .setPositiveButton("OK", null)
+                    .setCancelable(true)
+                    .show();
+
+            // Also play a sound or vibration if needed
+            android.os.Vibrator vibrator = (android.os.Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+            if (vibrator != null && vibrator.hasVibrator()) {
+                vibrator.vibrate(new long[]{0, 500, 200, 500}, -1);
+            }
+        });
     }
 
     /**
@@ -1566,6 +1767,9 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
                 // Update polyline
                 updateWaypointPolyline();
 
+                // Check NFZ after adding waypoint
+                checkWaypointsForNFZ();
+
                 Toast.makeText(this, "Waypoint " + markerNumber + " added", Toast.LENGTH_SHORT).show();
             }
         }
@@ -1575,6 +1779,11 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
      * Show mission start confirmation popup with swipe button
      */
     private void showMissionStartConfirmationPopup() {
+        // Validate NFZ before showing confirmation
+        if (!validateNFZBeforeMissionStart()) {
+            return; // NFZ validation failed, abort mission start
+        }
+
         // Inflate the popup layout
         LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View popupView = inflater.inflate(R.layout.popup_mission_start_confirmation, null);
@@ -1839,6 +2048,12 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
     protected void onDestroy() {
         super.onDestroy();
 
+        // Cancel any pending NFZ checks
+        if (nfzCheckRunnable != null && uiHandler != null) {
+            uiHandler.removeCallbacks(nfzCheckRunnable);
+            nfzCheckRunnable = null;
+        }
+
         // Unbind services
         if (isCommandServiceBound) {
             unbindService(commandServiceConnection);
@@ -1863,5 +2078,720 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
         LocalBroadcastManager.getInstance(this).unregisterReceiver(waypointStatusReceiver);
 
         Log.d(TAG, "WaypointActivity destroyed");
+    }
+
+    // ============================================================================================
+    // NFZ (No-Fly Zone) INTEGRATION
+    // ============================================================================================
+
+    /**
+     * Initialize NFZ panel
+     */
+    private void initializeNFZPanel() {
+        // Inflate NFZ panel layout
+        View nfzPanel = getLayoutInflater().inflate(R.layout.nfz_info_panel, null);
+        ViewGroup rootLayout = (ViewGroup) ((ViewGroup) findViewById(android.R.id.content)).getChildAt(0);
+
+        // Add panel to root layout
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
+            RelativeLayout.LayoutParams.WRAP_CONTENT,
+            RelativeLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+        params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+        params.setMargins(12, 0, 0, 260);
+        rootLayout.addView(nfzPanel, params);
+
+        // Get references
+        nfzInfoPanel = nfzPanel.findViewById(R.id.nfzInfoPanel);
+        nfzNameText = nfzPanel.findViewById(R.id.nfzNameText);
+        nfzLevelText = nfzPanel.findViewById(R.id.nfzLevelText);
+        nfzColorIndicator = nfzPanel.findViewById(R.id.nfzColorIndicator);
+        nfzAffectedWaypoints = nfzPanel.findViewById(R.id.nfzAffectedWaypoints);
+        btnUnlockNFZ = nfzPanel.findViewById(R.id.btnUnlockNFZ);
+        Button btnUnlockAllEnhancedWarnings = nfzPanel.findViewById(R.id.btnUnlockAllEnhancedWarnings);
+
+        // Initialize NFZ manager
+        nfzManager = new com.empowerbits.dronifyit.util.NFZManager();
+
+        // Setup unlock button
+        btnUnlockNFZ.setOnClickListener(v -> handleNFZUnlock());
+
+        // Setup unlock all enhanced warnings button
+        btnUnlockAllEnhancedWarnings.setOnClickListener(v -> handleUnlockAllEnhancedWarnings());
+
+        Log.d(TAG, "NFZ Panel initialized");
+    }
+
+    /**
+     * Check waypoints for NFZ with debouncing to prevent spam
+     */
+    private void checkWaypointsForNFZ() {
+        // Cancel any pending NFZ check
+        if (nfzCheckRunnable != null) {
+            uiHandler.removeCallbacks(nfzCheckRunnable);
+        }
+
+        // Debounce: skip if checked recently
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastNFZCheckTime < NFZ_CHECK_DEBOUNCE_MS) {
+            Log.d(TAG, "NFZ check debounced - too soon since last check");
+            return;
+        }
+
+        if (waypointsList == null || waypointsList.isEmpty()) {
+            hideNFZPanel();
+            return;
+        }
+
+        lastNFZCheckTime = currentTime;
+
+        // Convert waypoints to LatLng list
+        List<LatLng> waypointPositions = new ArrayList<>();
+        for (WaypointSetting wp : waypointsList) {
+            waypointPositions.add(new LatLng(wp.latitude, wp.longitude));
+        }
+
+        nfzManager.checkWaypoints(waypointPositions, new com.empowerbits.dronifyit.util.NFZManager.NFZCheckCallback() {
+            @Override
+            public void onNFZDetected(List<com.empowerbits.dronifyit.util.NFZManager.SimpleFlyZoneInfo> zones, List<Integer> affectedWaypoints) {
+                runOnUiThread(() -> {
+                    waypointsInNFZ = affectedWaypoints;
+                    currentNFZ = com.empowerbits.dronifyit.util.NFZManager.getMostRestrictiveNFZ(zones);
+
+                    // Draw NFZ polygons on map
+                    drawNFZPolygons(zones);
+
+                    // Update waypoint markers to show red for NFZ waypoints
+                    //updateWaypointMarkersWithNFZ(affectedWaypoints);
+
+                    // Show NFZ info panel
+                    if (currentNFZ != null) {
+                        String zoneName = currentNFZ.name != null ? currentNFZ.name : "Restricted Area";
+                        showNFZPanel(currentNFZ, affectedWaypoints.size());
+                        Log.d(TAG, "NFZ Detected: " + zoneName + " (" + currentNFZ.category + "), " +
+                              affectedWaypoints.size() + " waypoints affected");
+                    }
+                });
+            }
+
+            @Override
+            public void onNoNFZDetected() {
+                runOnUiThread(() -> {
+                    waypointsInNFZ.clear();
+                    currentNFZ = null;
+                    hideNFZPanel();
+                    //updateWaypointMarkersWithNFZ(new ArrayList<>());
+                    Log.d(TAG, "No NFZ detected");
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                runOnUiThread(() -> {
+                    Log.e(TAG, "NFZ check error: " + error);
+                });
+            }
+        });
+    }
+
+    /**
+     * Update waypoint markers with NFZ indicator
+     */
+    private void updateWaypointMarkersWithNFZ(List<Integer> affectedIndices) {
+        if (points == null || points.isEmpty()) return;
+
+        for (int i = 0; i < points.size(); i++) {
+            Marker marker = points.get(i);
+            if (affectedIndices.contains(i)) {
+                marker.setIcon(createCustomMarkerIcon(i + 1, Color.RED));
+            } else {
+                marker.setIcon(createCustomMarkerIcon(i + 1, Color.BLUE));
+            }
+        }
+    }
+
+    /**
+     * Create custom marker icon with number and color
+     */
+    private BitmapDescriptor createCustomMarkerIcon(int number, int color) {
+        Bitmap bitmap = Bitmap.createBitmap(80, 80, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+
+        // Draw circle
+        Paint paint = new Paint();
+        paint.setColor(color);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setAntiAlias(true);
+        canvas.drawCircle(40, 40, 35, paint);
+
+        // Draw white border
+        paint.setColor(Color.WHITE);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(4);
+        canvas.drawCircle(40, 40, 35, paint);
+
+        // Draw number
+        paint.setColor(Color.WHITE);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setTextSize(35);
+        paint.setTextAlign(Paint.Align.CENTER);
+        paint.setTypeface(Typeface.DEFAULT_BOLD);
+
+        Rect textBounds = new Rect();
+        String text = String.valueOf(number);
+        paint.getTextBounds(text, 0, text.length(), textBounds);
+        canvas.drawText(text, 40, 40 + textBounds.height()/2, paint);
+
+        return BitmapDescriptorFactory.fromBitmap(bitmap);
+    }
+
+    /**
+     * Show NFZ panel with SimpleFlyZoneInfo
+     */
+    private void showNFZPanel(com.empowerbits.dronifyit.util.NFZManager.SimpleFlyZoneInfo zone, int affectedCount) {
+        if (nfzInfoPanel == null || zone == null) return;
+
+        nfzInfoPanel.setVisibility(View.VISIBLE);
+
+        // Set zone name
+        String zoneName = zone.name != null ? zone.name : "Restricted Area";
+        nfzNameText.setText(zoneName);
+
+        // Set level and color
+        String category = zone.category;
+        nfzLevelText.setText(com.empowerbits.dronifyit.util.NFZManager.getNFZLevelText(category));
+
+        int color = com.empowerbits.dronifyit.util.NFZManager.getNFZColor(category);
+        nfzColorIndicator.getBackground().setColorFilter(color, PorterDuff.Mode.SRC_IN);
+
+        // Show affected waypoints count
+        if (affectedCount > 0) {
+            nfzAffectedWaypoints.setVisibility(View.VISIBLE);
+            nfzAffectedWaypoints.setText("Waypoints in zone: " + affectedCount);
+        } else {
+            nfzAffectedWaypoints.setVisibility(View.GONE);
+        }
+
+        // Show unlock button if zone is unlockable
+        if (com.empowerbits.dronifyit.util.NFZManager.isNFZUnlockable(category)) {
+            btnUnlockNFZ.setVisibility(View.VISIBLE);
+        } else {
+            btnUnlockNFZ.setVisibility(View.GONE);
+        }
+    }
+
+    /**
+     * Hide NFZ panel
+     */
+    private void hideNFZPanel() {
+        if (nfzInfoPanel != null) {
+            nfzInfoPanel.setVisibility(View.GONE);
+        }
+    }
+
+    /**
+     * Handle NFZ unlock
+     */
+    private void handleNFZUnlock() {
+        if (currentNFZ == null) {
+            Toast.makeText(this, "No NFZ to unlock", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!com.empowerbits.dronifyit.util.NFZManager.isNFZUnlockable(currentNFZ.category)) {
+            Toast.makeText(this,
+                "This zone cannot be unlocked. It is permanently restricted.",
+                Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // Show loading
+        btnUnlockNFZ.setEnabled(false);
+        btnUnlockNFZ.setText("Unlocking...");
+
+        nfzManager.requestUnlock(currentNFZ, new dji.v5.common.callback.CommonCallbacks.CompletionCallback() {
+            @Override
+            public void onSuccess() {
+                runOnUiThread(() -> {
+                    Toast.makeText(WaypointActivity.this,
+                        "✅ NFZ Unlocked Successfully!\n\nYou can now fly in this area.",
+                        Toast.LENGTH_LONG).show();
+
+                    btnUnlockNFZ.setText("Unlocked ✓");
+                    btnUnlockNFZ.setBackgroundColor(Color.GREEN);
+
+                    // Re-check waypoints
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                        checkWaypointsForNFZ();
+                    }, 1500);
+                });
+            }
+
+            @Override
+            public void onFailure(dji.v5.common.error.IDJIError error) {
+                runOnUiThread(() -> {
+                    Toast.makeText(WaypointActivity.this,
+                        "❌ Failed to unlock NFZ:\n" + error.description(),
+                        Toast.LENGTH_LONG).show();
+
+                    btnUnlockNFZ.setEnabled(true);
+                    btnUnlockNFZ.setText("Unlock Zone");
+                });
+            }
+        });
+    }
+
+    /**
+     * Handle unlocking all enhanced warning zones
+     */
+    private void handleUnlockAllEnhancedWarnings() {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Unlock All Enhanced Warnings")
+            .setMessage("This will unlock ALL enhanced warning fly zones.\n\nThe aircraft will no longer prompt enhanced warning zones after unlocking.\n\nDo you want to proceed?")
+            .setPositiveButton("Unlock All", (dialog, which) -> {
+                // Show progress
+                android.app.ProgressDialog progressDialog = new android.app.ProgressDialog(this);
+                progressDialog.setMessage("Unlocking all enhanced warnings...");
+                progressDialog.setCancelable(false);
+                progressDialog.show();
+
+                nfzManager.unlockAllEnhancedWarningZones(new dji.v5.common.callback.CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onSuccess() {
+                        runOnUiThread(() -> {
+                            progressDialog.dismiss();
+                            Toast.makeText(WaypointActivity.this,
+                                "✅ All Enhanced Warning Zones Unlocked!\n\nThe aircraft will no longer show enhanced warning prompts.",
+                                Toast.LENGTH_LONG).show();
+                        });
+                    }
+
+                    @Override
+                    public void onFailure(dji.v5.common.error.IDJIError error) {
+                        runOnUiThread(() -> {
+                            progressDialog.dismiss();
+                            String errorMsg = error != null && error.description() != null ?
+                                error.description() : "Failed to unlock enhanced warnings";
+                            Toast.makeText(WaypointActivity.this,
+                                "❌ Failed to unlock: " + errorMsg,
+                                Toast.LENGTH_LONG).show();
+                        });
+                    }
+                });
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+
+    /**
+     * Validate NFZ before mission start
+     */
+    private boolean validateNFZBeforeMissionStart() {
+        if (!waypointsInNFZ.isEmpty() && currentNFZ != null) {
+            String category = currentNFZ.category;
+            String zoneName = currentNFZ.name != null ? currentNFZ.name : "Restricted Area";
+
+            if (category != null && category.equalsIgnoreCase("RESTRICTED")) {
+                // Restricted zone - cannot fly
+                Toast.makeText(this,
+                    "❌ Cannot fly: " + waypointsInNFZ.size() +
+                    " waypoints are in a RESTRICTED No-Fly Zone!\n\n" +
+                    "Zone: " + zoneName,
+                    Toast.LENGTH_LONG).show();
+                return false;
+            } else if (category != null && category.equalsIgnoreCase("AUTHORIZATION")) {
+                // Authorization required
+                Toast.makeText(this,
+                    "⚠️ Warning: " + waypointsInNFZ.size() +
+                    " waypoints require authorization!\n\n" +
+                    "Please unlock the zone before starting.",
+                    Toast.LENGTH_LONG).show();
+
+                // Highlight unlock button
+                btnUnlockNFZ.setBackgroundColor(Color.YELLOW);
+                btnUnlockNFZ.setTextColor(Color.BLACK);
+
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    btnUnlockNFZ.setBackgroundResource(R.drawable.shape_button);
+                    btnUnlockNFZ.setTextColor(Color.WHITE);
+                }, 2000);
+                return false;
+            }
+        }
+        return true; // All clear
+    }
+
+    /**
+     * Show NFZ warning popup before mission start
+     */
+    private void showNFZWarningPopup() {
+        if (currentNFZ == null) {
+            showMissionStartConfirmationPopup();
+            return;
+        }
+
+        runOnUiThread(() -> {
+            LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            View popupView = inflater.inflate(R.layout.popup_nfz_warning, null);
+
+            // Create popup window
+            int width = (int) (340 * getResources().getDisplayMetrics().density);
+            nfzWarningPopup = new PopupWindow(popupView,
+                    width,
+                    DrawerLayout.LayoutParams.WRAP_CONTENT, true);
+            nfzWarningPopup.setAnimationStyle(android.R.style.Animation_Dialog);
+            nfzWarningPopup.setBackgroundDrawable(ContextCompat.getDrawable(this, android.R.color.transparent));
+            nfzWarningPopup.setOutsideTouchable(true);
+
+            // Get views
+            TextView zoneName = popupView.findViewById(R.id.nfzWarningZoneName);
+            TextView category = popupView.findViewById(R.id.nfzWarningCategory);
+
+            TextView description = popupView.findViewById(R.id.nfzWarningDescription);
+            Button btnCancel = popupView.findViewById(R.id.btnCancelMission);
+            Button btnUnlock = popupView.findViewById(R.id.btnUnlockNFZWarning);
+            Button btnContinue = popupView.findViewById(R.id.btnContinueAnyway);
+
+            // Set NFZ information
+            zoneName.setText(currentNFZ.name != null ? currentNFZ.name : "Restricted Area");
+            category.setText("Category: " + currentNFZ.category);
+
+            // Set description based on category
+            String desc = "";
+            boolean showUnlock = false;
+            boolean showContinue = false;
+
+            if (currentNFZ.category != null) {
+                switch (currentNFZ.category.toUpperCase()) {
+                    case "RESTRICTED":
+                        desc = "🚫 RESTRICTED ZONE\n\nThis is a restricted no-fly zone. Flight is prohibited in this area. Please remove waypoints from this zone.";
+                        btnUnlock.setVisibility(View.GONE);
+                        btnContinue.setVisibility(View.GONE);
+                        break;
+                    case "AUTHORIZATION":
+                        desc = "⚠️ AUTHORIZATION REQUIRED\n\nThis zone requires authorization to fly. You must unlock this zone before starting the mission.";
+                        showUnlock = true;
+                        break;
+                    case "WARNING":
+                        desc = "⚠️ WARNING ZONE\n\nThis is a warning zone. Exercise caution when flying in this area. You may continue with caution.";
+                        showContinue = true;
+                        break;
+                    case "ENHANCED_WARNING":
+                        desc = "⚠️ ENHANCED WARNING ZONE\n\nThis is an enhanced warning zone. You can unlock all enhanced warning zones to disable future prompts.\n\nYou may also continue with caution.";
+                        showUnlock = true;  // Show unlock for enhanced warnings
+                        showContinue = true;
+                        // Change unlock button text for enhanced warnings
+                        btnUnlock.setText("Unlock All Enhanced Warnings");
+                        break;
+                    default:
+                        desc = "⚠️ NO-FLY ZONE\n\nYour mission intersects with a no-fly zone. Please review your waypoints.";
+                        break;
+                }
+            }
+
+            description.setText(desc);
+
+            // Always show unlock button, but disable if not unlockable
+            btnUnlock.setVisibility(View.VISIBLE);
+            if (showUnlock) {
+                btnUnlock.setEnabled(true);
+                btnUnlock.setAlpha(1.0f);
+            } else {
+                btnUnlock.setEnabled(false);
+                btnUnlock.setAlpha(0.5f);
+                btnUnlock.setText("Not Unlockable");
+            }
+
+            if (showContinue) {
+                btnContinue.setVisibility(View.VISIBLE);
+            }
+
+            // Cancel button
+            btnCancel.setOnClickListener(v -> {
+                if (nfzWarningPopup != null && nfzWarningPopup.isShowing()) {
+                    nfzWarningPopup.dismiss();
+                }
+            });
+
+            // Unlock button
+            btnUnlock.setOnClickListener(v -> {
+                unlockNFZForMission();
+            });
+
+            // Continue anyway button
+            btnContinue.setOnClickListener(v -> {
+                if (nfzWarningPopup != null && nfzWarningPopup.isShowing()) {
+                    nfzWarningPopup.dismiss();
+                }
+                // Proceed to mission confirmation
+                showMissionStartConfirmationPopup();
+            });
+
+            // Show popup
+            nfzWarningPopup.showAtLocation(findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
+        });
+    }
+
+    /**
+     * Unlock NFZ for mission using DJI FlySafe unlock mechanism
+     */
+    private void unlockNFZForMission() {
+        if (currentNFZ == null) {
+            Toast.makeText(this, "No NFZ to unlock", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Button btnUnlock = nfzWarningPopup.getContentView().findViewById(R.id.btnUnlockNFZWarning);
+        btnUnlock.setEnabled(false);
+        btnUnlock.setText("Unlocking...");
+
+        // Check if this is an enhanced warning zone
+        if (currentNFZ.category != null && currentNFZ.category.equalsIgnoreCase("ENHANCED_WARNING")) {
+            // Unlock all enhanced warning zones
+            nfzManager.unlockAllEnhancedWarningZones(new dji.v5.common.callback.CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onSuccess() {
+                    runOnUiThread(() -> {
+                        Toast.makeText(WaypointActivity.this,
+                                "✅ All enhanced warning zones unlocked!\n\nThe aircraft will no longer show enhanced warning prompts.",
+                                Toast.LENGTH_LONG).show();
+
+                        if (nfzWarningPopup != null && nfzWarningPopup.isShowing()) {
+                            nfzWarningPopup.dismiss();
+                        }
+
+                        // Proceed to mission confirmation
+                        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                            showMissionStartConfirmationPopup();
+                        }, 500);
+                    });
+                }
+
+                @Override
+                public void onFailure(dji.v5.common.error.IDJIError error) {
+                    runOnUiThread(() -> {
+                        String errorMsg = error != null && error.description() != null ?
+                                error.description() : "Failed to unlock enhanced warnings";
+                        Toast.makeText(WaypointActivity.this,
+                                "❌ Unlock failed: " + errorMsg,
+                                Toast.LENGTH_LONG).show();
+
+                        btnUnlock.setEnabled(true);
+                        btnUnlock.setText("Unlock All Enhanced Warnings");
+                    });
+                }
+            });
+        } else if (com.empowerbits.dronifyit.util.NFZManager.isNFZUnlockable(currentNFZ.category)) {
+            // Regular authorization zone unlock
+            nfzManager.requestUnlock(currentNFZ, new dji.v5.common.callback.CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onSuccess() {
+                    runOnUiThread(() -> {
+                        Toast.makeText(WaypointActivity.this,
+                                "✅ Zone unlocked successfully!",
+                                Toast.LENGTH_LONG).show();
+
+                        if (nfzWarningPopup != null && nfzWarningPopup.isShowing()) {
+                            nfzWarningPopup.dismiss();
+                        }
+
+                        // Recheck waypoints after a delay
+                        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                            checkWaypointsForNFZ();
+                            // Proceed to mission confirmation
+                            showMissionStartConfirmationPopup();
+                        }, 1500);
+                    });
+                }
+
+                @Override
+                public void onFailure(dji.v5.common.error.IDJIError error) {
+                    runOnUiThread(() -> {
+                        String errorMsg = error != null && error.description() != null ?
+                                error.description() : "Failed to unlock zone";
+                        Toast.makeText(WaypointActivity.this,
+                                "❌ Unlock failed: " + errorMsg,
+                                Toast.LENGTH_LONG).show();
+
+                        btnUnlock.setEnabled(true);
+                        btnUnlock.setText("Unlock Zone");
+                    });
+                }
+            });
+        } else {
+            // Cannot unlock this zone type
+            Toast.makeText(this,
+                    "This zone cannot be unlocked. It is permanently restricted.",
+                    Toast.LENGTH_LONG).show();
+            btnUnlock.setEnabled(true);
+            btnUnlock.setText("Unlock Zone");
+        }
+    }
+
+    /**
+     * Draw NFZ polygons on the map
+     */
+    private void drawNFZPolygons(List<com.empowerbits.dronifyit.util.NFZManager.SimpleFlyZoneInfo> zones) {
+        if (googleMap == null) {
+            Log.w(TAG, "Cannot draw NFZ polygons - map not ready");
+            return;
+        }
+
+        runOnUiThread(() -> {
+            // Clear existing polygons
+            clearNFZPolygons();
+
+            for (com.empowerbits.dronifyit.util.NFZManager.SimpleFlyZoneInfo zone : zones) {
+                if (zone.hasPolygons()) {
+                    int color = com.empowerbits.dronifyit.util.NFZManager.getNFZColor(zone.category);
+                    int fillColor = Color.argb(50, Color.red(color), Color.green(color), Color.blue(color));
+
+                    for (List<LatLng> polygonPoints : zone.polygons) {
+                        PolygonOptions polygonOptions = new PolygonOptions()
+                                .addAll(polygonPoints)
+                                .strokeColor(color)
+                                .strokeWidth(3f)
+                                .fillColor(fillColor)
+                                .clickable(true);
+
+                        Polygon polygon = googleMap.addPolygon(polygonOptions);
+                        nfzPolygons.add(polygon);
+                        polygonToZoneMap.put(polygon, zone);
+
+                        Log.d(TAG, "Drew polygon for zone: " + zone.name + " with " +
+                              polygonPoints.size() + " vertices, color: " + zone.category);
+                    }
+
+                    // Add marker at center with category label
+                    addNFZLabel(zone);
+                }
+            }
+
+            // Setup polygon click listener
+            googleMap.setOnPolygonClickListener(polygon -> {
+                com.empowerbits.dronifyit.util.NFZManager.SimpleFlyZoneInfo zone = polygonToZoneMap.get(polygon);
+                if (zone != null) {
+                    showNFZInfoDialog(zone);
+                }
+            });
+        });
+    }
+
+    /**
+     * Add a label marker for NFZ
+     */
+    private void addNFZLabel(com.empowerbits.dronifyit.util.NFZManager.SimpleFlyZoneInfo zone) {
+        if (googleMap == null) return;
+
+        try {
+            // Create label text
+            String labelText = zone.category != null ? zone.category : "NFZ";
+
+            // Increased dimensions for larger label
+            int width = 400;
+            int height = 100;
+
+            // Create a custom marker with text
+            Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+
+            // Background
+            Paint bgPaint = new Paint();
+            bgPaint.setColor(com.empowerbits.dronifyit.util.NFZManager.getNFZColor(zone.category));
+            bgPaint.setAlpha(200);
+            bgPaint.setStyle(Paint.Style.FILL);
+            canvas.drawRoundRect(10, 10, width - 10, height - 10, 15, 15, bgPaint);
+
+            // Border
+            Paint borderPaint = new Paint();
+            borderPaint.setColor(Color.WHITE);
+            borderPaint.setStyle(Paint.Style.STROKE);
+            borderPaint.setStrokeWidth(3);
+            canvas.drawRoundRect(10, 10, width - 10, height - 10, 15, 15, borderPaint);
+
+            // Text - increased font size
+            Paint textPaint = new Paint();
+            textPaint.setColor(Color.WHITE);
+            textPaint.setTextSize(36);  // Increased from 24 to 36
+            textPaint.setTypeface(Typeface.DEFAULT_BOLD);
+            textPaint.setAntiAlias(true);
+            textPaint.setTextAlign(Paint.Align.CENTER);
+
+            canvas.drawText(labelText, width / 2, height / 2 + 12, textPaint);
+
+            BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(bitmap);
+
+            MarkerOptions markerOptions = new MarkerOptions()
+                    .position(new LatLng(zone.latitude, zone.longitude))
+                    .icon(icon)
+                    .anchor(0.5f, 0.5f)
+                    .zIndex(100);
+
+            googleMap.addMarker(markerOptions);
+
+            Log.d(TAG, "Added label for NFZ: " + zone.name + " at " + zone.latitude + ", " + zone.longitude);
+        } catch (Exception e) {
+            Log.e(TAG, "Error adding NFZ label: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Show detailed NFZ information dialog
+     */
+    private void showNFZInfoDialog(com.empowerbits.dronifyit.util.NFZManager.SimpleFlyZoneInfo zone) {
+        runOnUiThread(() -> {
+            String message = "Name: " + zone.name + "\n" +
+                           "Category: " + zone.category + "\n" +
+                           "Level: " + com.empowerbits.dronifyit.util.NFZManager.getNFZLevelText(zone.category) + "\n" +
+                           "Location: " + String.format("%.6f, %.6f", zone.latitude, zone.longitude);
+
+            if (zone.radiusMeters > 0) {
+                message += "\nRadius: " + String.format("%.0fm", zone.radiusMeters);
+            }
+
+            new androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("No-Fly Zone Information")
+                    .setMessage(message)
+                    .setPositiveButton("OK", null)
+                    .show();
+        });
+    }
+
+    /**
+     * Clear all NFZ polygons from map
+     */
+    private void clearNFZPolygons() {
+        runOnUiThread(() -> {
+            for (Polygon polygon : nfzPolygons) {
+                polygon.remove();
+            }
+            nfzPolygons.clear();
+            polygonToZoneMap.clear();
+            Log.d(TAG, "Cleared all NFZ polygons");
+        });
+    }
+
+    /**
+     * Load and display NFZ polygons when map is ready
+     */
+    private void loadNFZPolygons(LatLng location) {
+        if (nfzManager == null) {
+            Log.w(TAG, "NFZ Manager not initialized");
+            return;
+        }
+
+        nfzManager.getFlyZonesForVisualization(location, new com.empowerbits.dronifyit.util.NFZManager.FlyZonesCallback() {
+            @Override
+            public void onFlyZonesRetrieved(List<com.empowerbits.dronifyit.util.NFZManager.SimpleFlyZoneInfo> zones) {
+                Log.d(TAG, "Retrieved " + zones.size() + " fly zones for visualization");
+                drawNFZPolygons(zones);
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Error loading fly zones for visualization: " + error);
+            }
+        });
     }
 }

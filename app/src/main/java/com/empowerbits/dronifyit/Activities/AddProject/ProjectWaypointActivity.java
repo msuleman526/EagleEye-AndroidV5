@@ -77,6 +77,11 @@ public class ProjectWaypointActivity extends AppCompatActivity implements OnMapR
     private static final int ALLOWED_AIRSPACE_MAX = 300;
     private static final int ALLOWED_AIRSPACE_DEFAULT = 200;
 
+    private static final int SMALL_CIRCLE_RADIUS_MIN = 8;
+    private static final int SMALL_CIRCLE_RADIUS_MAX = 35;
+    private static final int SMALL_CIRCLE_RADIUS_DEFAULT = 15;
+    private static final int SMALL_CIRCLE_WAYPOINT_COUNT = 10;
+
     // Bundle keys for state preservation
     private static final String KEY_HOUSE_HEIGHT = "house_height";
     private static final String KEY_WAYPOINT_COUNT = "waypoint_count";
@@ -99,12 +104,16 @@ public class ProjectWaypointActivity extends AppCompatActivity implements OnMapR
     private ImageButton radiusPlusBtn;
     private EditText maxObstacleHeight;
     private EditText allowdAirSpaceHeightEdt;
+    private EditText smallCircleRadiusEdt;
+    private ImageButton smallCircleMinusBtn;
+    private ImageButton smallCirclePlusBtn;
     private Button continueBtn;
 
     // Map Components
     private GoogleMap googleMap;
     private SupportMapFragment mapFragment;
-    private MapHelper mapHelper;
+    private MapHelper mapHelper; // For regular waypoints (numbered 9+)
+    private MapHelper smallCircleMapHelper; // For small circle waypoints (numbered 1-8)
     private Marker projectLocationMarker;
 
     // Camera position state for orientation change
@@ -264,6 +273,9 @@ public class ProjectWaypointActivity extends AppCompatActivity implements OnMapR
             radiusPlusBtn = findViewById(R.id.radiusPlusBtn);
             maxObstacleHeight = findViewById(R.id.maxObstacleHeight);
             allowdAirSpaceHeightEdt = findViewById(R.id.allowdAirSpaceHeightEdt);
+            smallCircleRadiusEdt = findViewById(R.id.smallCircleRadiusEdt);
+            smallCircleMinusBtn = findViewById(R.id.smallCircleMinusBtn);
+            smallCirclePlusBtn = findViewById(R.id.smallCirclePlusBtn);
             continueBtn = findViewById(R.id.continueBtn);
         } catch (Exception e) {
             Log.e(TAG, "Error initializing components: " + e.getMessage());
@@ -302,6 +314,8 @@ public class ProjectWaypointActivity extends AppCompatActivity implements OnMapR
             waypointPlusBtn.setOnClickListener(v -> adjustWaypointCount(1));
             radiusMinusBtn.setOnClickListener(v -> adjustWaypointRadius(-1));
             radiusPlusBtn.setOnClickListener(v -> adjustWaypointRadius(1));
+            smallCircleMinusBtn.setOnClickListener(v -> adjustSmallCircleRadius(-1));
+            smallCirclePlusBtn.setOnClickListener(v -> adjustSmallCircleRadius(1));
             continueBtn.setOnClickListener(v -> onContinueClicked());
             setupTextWatchers();
         } catch (Exception e) {
@@ -387,6 +401,21 @@ public class ProjectWaypointActivity extends AppCompatActivity implements OnMapR
                 validateAndConstrainValue(allowdAirSpaceHeightEdt, ALLOWED_AIRSPACE_MIN, ALLOWED_AIRSPACE_MAX, "Allowed Airspace Height");
             }
         });
+
+        // Small Circle Radius validation (6-20 feet) - Local only, not sent to server
+        smallCircleRadiusEdt.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                validateAndConstrainValue(smallCircleRadiusEdt, SMALL_CIRCLE_RADIUS_MIN, SMALL_CIRCLE_RADIUS_MAX, "Small Circle Radius");
+                generateSmallCircleWaypoints();
+            }
+        });
     }
 
     private void validateAndConstrainValue(EditText editText, int min, int max, String fieldName) {
@@ -395,7 +424,6 @@ public class ProjectWaypointActivity extends AppCompatActivity implements OnMapR
             if (text.isEmpty()) {
                 return;
             }
-
             int value = Integer.parseInt(text);
             if (value < min) {
                 editText.setError(fieldName + " must be at least " + min + " ft");
@@ -443,6 +471,66 @@ public class ProjectWaypointActivity extends AppCompatActivity implements OnMapR
         }
     }
 
+    private void adjustSmallCircleRadius(int delta) {
+        try {
+            String currentText = smallCircleRadiusEdt.getText().toString().trim();
+            int currentValue = currentText.isEmpty() ? SMALL_CIRCLE_RADIUS_DEFAULT : Integer.parseInt(currentText);
+
+            int newValue = currentValue + delta;
+            if (newValue >= SMALL_CIRCLE_RADIUS_MIN && newValue <= SMALL_CIRCLE_RADIUS_MAX) {
+                smallCircleRadiusEdt.setText(String.valueOf(newValue));
+                // TextWatcher will trigger small circle generation
+            } else {
+                Toast.makeText(this, "Small circle radius must be between " + SMALL_CIRCLE_RADIUS_MIN + " and " + SMALL_CIRCLE_RADIUS_MAX + " ft", Toast.LENGTH_SHORT).show();
+            }
+        } catch (NumberFormatException e) {
+            smallCircleRadiusEdt.setText(String.valueOf(SMALL_CIRCLE_RADIUS_DEFAULT));
+        }
+    }
+
+    /**
+     * Generate 8 waypoints in a small circle around the center location
+     * These waypoints are numbered 1-8 and are local only (NOT sent to server)
+     * Regular waypoints will be numbered starting from 9
+     */
+    private void generateSmallCircleWaypoints() {
+        try {
+            // Check if map and project location are ready
+            if (googleMap == null || project == null ||
+                project.latitude == null || project.longitude == null) {
+                Log.w(TAG, "Cannot generate small circle waypoints: map or location not ready");
+                return;
+            }
+
+            // Get radius in feet
+            String radiusText = smallCircleRadiusEdt.getText().toString().trim();
+            if (radiusText.isEmpty()) {
+                return;
+            }
+            int radiusFeet = Integer.parseInt(radiusText);
+
+            // Get center location
+            double centerLat = Double.parseDouble(project.latitude);
+            double centerLng = Double.parseDouble(project.longitude);
+            LatLng centerLocation = new LatLng(centerLat, centerLng);
+
+            // Initialize small circle MapHelper if not already done
+            if (smallCircleMapHelper == null) {
+                smallCircleMapHelper = new MapHelper(this, googleMap, centerLocation);
+            } else {
+                smallCircleMapHelper.setCenterLocation(centerLocation);
+            }
+
+            // Generate 8 waypoints numbered 1-8 using MapHelper
+            smallCircleMapHelper.updateWaypoints(SMALL_CIRCLE_WAYPOINT_COUNT, radiusFeet, 1);
+
+            Log.d(TAG, "Generated " + SMALL_CIRCLE_WAYPOINT_COUNT + " small circle waypoints (numbered 1-8) at " + radiusFeet + " ft radius");
+
+        } catch (Exception e) {
+            Log.e(TAG, "Error generating small circle waypoints: " + e.getMessage(), e);
+        }
+    }
+
     private void regenerateWaypointsFromUI() {
         try {
             String countText = noOfWaypointEdit.getText().toString().trim();
@@ -485,6 +573,10 @@ public class ProjectWaypointActivity extends AppCompatActivity implements OnMapR
                         if (flightSettings.has("noOfWaypoints")) {
                             noOfWaypointEdit.setText(String.valueOf(flightSettings.getInt("noOfWaypoints")));
                         }
+
+                        if (flightSettings.has("smallCircleRadius")) {
+                            smallCircleRadiusEdt.setText(String.valueOf(flightSettings.getInt("smallCircleRadius")));
+                        }
                     } catch (Exception e) {
                         Log.e(TAG, "Error parsing flight settings: " + e.getMessage());
                     }
@@ -492,6 +584,7 @@ public class ProjectWaypointActivity extends AppCompatActivity implements OnMapR
             }else{
                 noOfWaypointEdit.setText(String.valueOf(WAYPOINT_COUNT_DEFAULT));
                 waypointRadiusEdt.setText(String.valueOf(WAYPOINT_RADIUS_DEFAULT));
+                smallCircleRadiusEdt.setText(String.valueOf(SMALL_CIRCLE_RADIUS_DEFAULT));
             }
 
             // Load obstacle data (already in feet)
@@ -510,6 +603,7 @@ public class ProjectWaypointActivity extends AppCompatActivity implements OnMapR
             }else{
                 allowdAirSpaceHeightEdt.setText(String.valueOf(ALLOWED_AIRSPACE_DEFAULT));
             }
+
             // Set waypoint count
             if (!waypointList.isEmpty()) {
                 noOfWaypointEdit.setText(String.valueOf(waypointList.size()));
@@ -530,23 +624,36 @@ public class ProjectWaypointActivity extends AppCompatActivity implements OnMapR
             double centerLng = Double.parseDouble(project.longitude);
             LatLng centerLocation = new LatLng(centerLat, centerLng);
 
-            // Use MapHelper to generate and display waypoints with numbered markers
-            if (mapHelper != null) {
-                mapHelper.setCenterLocation(centerLocation);
-                mapHelper.updateWaypoints(count, radiusFeet);
+            // Clear waypoint list to rebuild with both small circle and regular waypoints
+            waypointList.clear();
 
-                // Get generated waypoints from MapHelper
-                List<LatLng> generatedWaypoints = mapHelper.getWaypoints();
-
-                // Convert to WaypointAddress list
-                waypointList.clear();
-                int houseHeightFeet = getHouseHeight();
-
-                for (LatLng waypoint : generatedWaypoints) {
+            // 1. Add small circle waypoints (numbered 1-8) if radius is set
+            if (smallCircleMapHelper != null) {
+                List<LatLng> smallCircleWaypoints = smallCircleMapHelper.getWaypoints();
+                for (LatLng waypoint : smallCircleWaypoints) {
                     FlightAddress waypointAddress = new FlightAddress(waypoint.latitude, waypoint.longitude);
                     waypointList.add(waypointAddress);
                 }
+                Log.d(TAG, "Added " + smallCircleWaypoints.size() + " small circle waypoints to list");
             }
+
+            // 2. Add regular waypoints (numbered 9+)
+            if (mapHelper != null) {
+                mapHelper.setCenterLocation(centerLocation);
+                mapHelper.updateWaypoints(count, radiusFeet, SMALL_CIRCLE_WAYPOINT_COUNT + 1);
+
+                // Get generated waypoints from MapHelper
+                List<LatLng> regularWaypoints = mapHelper.getWaypoints();
+
+                for (LatLng waypoint : regularWaypoints) {
+                    FlightAddress waypointAddress = new FlightAddress(waypoint.latitude, waypoint.longitude);
+                    waypointList.add(waypointAddress);
+                }
+                Log.d(TAG, "Added " + regularWaypoints.size() + " regular waypoints to list");
+            }
+
+            Log.d(TAG, "Total waypoints to send to server: " + waypointList.size());
+
         } catch (Exception e) {
             Log.e(TAG, "Error generating waypoints: " + e.getMessage());
             Toast.makeText(this, "Error generating waypoints", Toast.LENGTH_SHORT).show();
@@ -598,6 +705,12 @@ public class ProjectWaypointActivity extends AppCompatActivity implements OnMapR
                 savedCameraZoom = 19f;
             }
 
+            // Generate small circle waypoints if radius is set
+            if (projectLocation != null && smallCircleRadiusEdt != null &&
+                !smallCircleRadiusEdt.getText().toString().trim().isEmpty()) {
+                generateSmallCircleWaypoints();
+            }
+
             // Display existing waypoints or generate default
             if (isRestoringState && !waypointList.isEmpty()) {
                 // Display restored waypoints after orientation change
@@ -633,8 +746,8 @@ public class ProjectWaypointActivity extends AppCompatActivity implements OnMapR
             String radiusText = waypointRadiusEdt.getText().toString().trim();
             int radiusFeet = radiusText.isEmpty() ? WAYPOINT_RADIUS_DEFAULT : Integer.parseInt(radiusText);
 
-            // Use MapHelper to display waypoints with numbered markers
-            mapHelper.updateWaypoints(waypointList.size(), radiusFeet);
+            // Use MapHelper to display waypoints with numbered markers starting from 9
+            mapHelper.updateWaypoints(waypointList.size(), radiusFeet, SMALL_CIRCLE_WAYPOINT_COUNT + 1);
         } catch (Exception e) {
             Log.e(TAG, "Error displaying restored waypoints: " + e.getMessage());
         }
@@ -661,11 +774,10 @@ public class ProjectWaypointActivity extends AppCompatActivity implements OnMapR
 
             waypointSetting.noOfWaypoints = waypointCount;
             waypointSetting.circleRadius = waypointRadiusFeet; // Actually stores feet
+            waypointSetting.smallCircleRadius = getSmallCircleRadius();
 
-            // Ensure waypoints are generated
-            if (waypointList.isEmpty()) {
-                generateWaypoints(waypointCount, waypointRadiusFeet);
-            }
+            // Always regenerate waypoints to ensure we have both small circle + regular waypoints
+            generateWaypoints(waypointCount, waypointRadiusFeet);
 
             // Show loading
             showLoading();
@@ -776,6 +888,16 @@ public class ProjectWaypointActivity extends AppCompatActivity implements OnMapR
             return Integer.parseInt(text);
         } catch (NumberFormatException e) {
             return WAYPOINT_RADIUS_DEFAULT;
+        }
+    }
+
+    private int getSmallCircleRadius() {
+        try {
+            String text = smallCircleRadiusEdt.getText().toString().trim();
+            if (text.isEmpty()) return SMALL_CIRCLE_RADIUS_DEFAULT;
+            return Integer.parseInt(text);
+        } catch (NumberFormatException e) {
+            return SMALL_CIRCLE_RADIUS_DEFAULT;
         }
     }
 
@@ -908,10 +1030,14 @@ public class ProjectWaypointActivity extends AppCompatActivity implements OnMapR
                 loadingDialog = null;
             }
 
-            // Cleanup MapHelper
+            // Cleanup MapHelper instances
             if (mapHelper != null) {
                 mapHelper.clearMarkers();
                 mapHelper = null;
+            }
+            if (smallCircleMapHelper != null) {
+                smallCircleMapHelper.clearMarkers();
+                smallCircleMapHelper = null;
             }
         } catch (Exception e) {
             Log.e(TAG, "Error destroying activity: " + e.getMessage());

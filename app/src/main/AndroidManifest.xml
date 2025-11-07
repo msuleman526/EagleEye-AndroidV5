@@ -33,11 +33,9 @@
         android:xlargeScreens="true" />
 
     <!-- USB connection features -->
-    <uses-feature
-        android:name="android.hardware.usb.host"
+    <uses-feature android:name="android.hardware.usb.host"
         android:required="false" />
-    <uses-feature
-        android:name="android.hardware.usb.accessory"
+    <uses-feature android:name="android.hardware.usb.accessory"
         android:required="true" />
 
     <application
@@ -77,11 +75,11 @@
             android:exported="true"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden">
             <intent-filter>
-                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
+                <action android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"/>
             </intent-filter>
             <meta-data
-                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
-                android:resource="@xml/accessory_filter" />
+                android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"
+                android:resource="@xml/accessory_filter"/>
         </activity>
 
         <!-- Waypoint Activity -->

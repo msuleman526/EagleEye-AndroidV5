@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:developer.dji.com)",
-      "Bash(./gradlew assembleDebug:*)"
+      "Bash(./gradlew assembleDebug:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": []

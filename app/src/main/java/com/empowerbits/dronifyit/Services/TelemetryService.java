@@ -508,8 +508,9 @@ public class TelemetryService {
                                       ", Alt=" + String.format("%.1f", newValue.getAltitude()) + "m");
                         }
 
-                        if (locationChangedListener != null) {
-                            uiHandler.post(() -> locationChangedListener.onLocationChanged(newValue));
+                        LocationChangedListener listener = locationChangedListener;
+                        if (listener != null) {
+                            uiHandler.post(() -> listener.onLocationChanged(newValue));
                         }
                     }
                 });
@@ -521,8 +522,9 @@ public class TelemetryService {
                 @Override
                 public void onValueChange(@Nullable LocationCoordinate2D locationCoordinate2D, @Nullable LocationCoordinate2D newValue) {
                     homeLocation = newValue;
-                    if (locationChangedListener != null) {
-                        uiHandler.post(() -> locationChangedListener.onHomeLocationChanged(newValue));
+                    LocationChangedListener listener = locationChangedListener;
+                    if (listener != null) {
+                        uiHandler.post(() -> listener.onHomeLocationChanged(newValue));
                     }
                 }
             });

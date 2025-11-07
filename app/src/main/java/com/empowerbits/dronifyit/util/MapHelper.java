@@ -138,47 +138,54 @@ public class MapHelper {
      * @param radiusFeet Radius in feet for waypoint circle
      */
     public void updateWaypoints(int waypointCount, int radiusFeet) {
+        updateWaypoints(waypointCount, radiusFeet, 1);
+    }
+
+    /**
+     * Update waypoints around the center location with custom starting number
+     * @param waypointCount Number of waypoints to generate
+     * @param radiusFeet Radius in feet for waypoint circle
+     * @param startNumber Starting number for waypoint numbering (e.g., 9 to start from waypoint 9)
+     */
+    public void updateWaypoints(int waypointCount, int radiusFeet, int startNumber) {
         if (googleMap == null || centerLocation == null) {
             Log.w(TAG, "Cannot update waypoints - map or center location is null");
             return;
         }
-        
+
         try {
             // Clear existing waypoints
             clearWaypointMarkers();
-            
-            // Convert feet to meters (1 foot = 0.3048 meters)
-            int radiusMeters = (int) (radiusFeet * 0.3048);
-            
-            // Generate new waypoints in a circle
-            waypoints = generateCircularWaypoints(centerLocation, radiusMeters, waypointCount);
-            
+
+            // Generate new waypoints in a circle (using feet directly)
+            waypoints = generateCircularWaypoints(centerLocation, radiusFeet, waypointCount);
+
             // Add markers for each waypoint
             for (int i = 0; i < waypoints.size(); i++) {
                 LatLng waypoint = waypoints.get(i);
-                
-                // Create numbered marker (1-based numbering for user)
-                int markerNumber = i + 1;
-                
+
+                // Create numbered marker (starting from startNumber)
+                int markerNumber = startNumber + i;
+
                 MarkerOptions markerOptions = new MarkerOptions()
                     .position(waypoint)
                     .title("Waypoint " + markerNumber)
-                    .snippet("Lat: " + String.format("%.6f", waypoint.latitude) + 
+                    .snippet("Lat: " + String.format("%.6f", waypoint.latitude) +
                             "\nLng: " + String.format("%.6f", waypoint.longitude))
                     .icon(createNumberedMarkerIcon(markerNumber))
                     .anchor(0.5f, 0.8f); // Anchor at bottom center for original map_marker shape
-                
+
                 Marker marker = googleMap.addMarker(markerOptions);
                 if (marker != null) {
                     waypointMarkers.add(marker);
                 }
             }
-            
+
             // Draw path connecting waypoints
             drawWaypointPath();
-            
-            Log.d(TAG, "Updated waypoints: " + waypointCount + " points at " + radiusFeet + " feet (" + radiusMeters + "m)");
-            
+
+            Log.d(TAG, "Updated waypoints: " + waypointCount + " points at " + radiusFeet + " feet, starting from #" + startNumber);
+
         } catch (Exception e) {
             Log.e(TAG, "Error updating waypoints: " + e.getMessage());
         }
@@ -243,15 +250,15 @@ public class MapHelper {
     
     /**
      * Generate waypoints in a circular pattern
-     * @param radiusMeters Radius in meters
+     * @param radiusFeet Radius in feet
      * @param waypointCount Number of waypoints
      * @return List of waypoint coordinates
      */
-    private List<LatLng> generateCircularWaypoints(LatLng center, int radiusMeters, int waypointCount) {
+    private List<LatLng> generateCircularWaypoints(LatLng center, double radiusFeet, int waypointCount) {
         List<LatLng> points = new ArrayList<>();
-        
-        // Convert radius from meters to degrees (approximation)
-        double radiusInDegrees = radiusMeters / 111320.0; // meters per degree latitude
+
+        // Convert radius from feet to degrees (1 foot = 0.3048 meters, 111320 meters per degree latitude)
+        double radiusInDegrees = (radiusFeet * 0.3048) / 111320.0;
         
         double angleStep = 360.0 / waypointCount;
         
