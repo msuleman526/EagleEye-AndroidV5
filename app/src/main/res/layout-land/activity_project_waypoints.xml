@@ -96,6 +96,7 @@
 
                 <!-- Number of Waypoints Field -->
                 <LinearLayout
+                    android:visibility="gone"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
@@ -114,19 +115,9 @@
                         android:orientation="horizontal"
                         android:weightSum="10">
 
-                        <ImageButton
-                            android:id="@+id/waypointMinusBtn"
-                            android:layout_width="0dp"
-                            android:layout_height="match_parent"
-                            android:layout_weight="1"
-                            android:src="@drawable/minus"
-                            android:background="@drawable/transparent_button"
-                            app:tint="@color/text_primary" />
-
                         <EditText
                             android:id="@+id/noOfWaypointEdit"
                             android:layout_width="0dp"
-                            android:layout_marginLeft="5dp"
                             android:layout_marginRight="5dp"
                             android:layout_weight="8"
                             android:layout_height="38dp"
@@ -138,6 +129,16 @@
                             android:textColor="@color/text_primary"
                             android:textColorHint="@color/text_primary"
                             android:inputType="number" />
+
+                        <ImageButton
+                            android:id="@+id/waypointMinusBtn"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:layout_marginRight="5dp"
+                            android:src="@drawable/minus"
+                            android:background="@drawable/transparent_button"
+                            app:tint="@color/text_primary" />
 
                         <ImageButton
                             android:id="@+id/waypointPlusBtn"
@@ -171,19 +172,9 @@
                         android:orientation="horizontal"
                         android:weightSum="10">
 
-                        <ImageButton
-                            android:id="@+id/radiusMinusBtn"
-                            android:layout_width="0dp"
-                            android:layout_height="match_parent"
-                            android:layout_weight="1"
-                            android:src="@drawable/minus"
-                            android:background="@drawable/transparent_button"
-                            app:tint="@color/text_primary" />
-
                         <EditText
                             android:id="@+id/waypointRadiusEdt"
                             android:layout_width="0dp"
-                            android:layout_marginLeft="5dp"
                             android:layout_marginRight="5dp"
                             android:layout_weight="8"
                             android:layout_height="38dp"
@@ -195,6 +186,16 @@
                             android:textColor="@color/text_primary"
                             android:textColorHint="@color/text_primary"
                             android:inputType="number" />
+
+                        <ImageButton
+                            android:id="@+id/radiusMinusBtn"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:layout_marginRight="5dp"
+                            android:src="@drawable/minus"
+                            android:background="@drawable/transparent_button"
+                            app:tint="@color/text_primary" />
 
                         <ImageButton
                             android:id="@+id/radiusPlusBtn"
@@ -268,67 +269,6 @@
                         android:drawableTint="@color/text_primary"
                         android:drawableEnd="@drawable/feet_icon"
                         android:drawablePadding="6dp" />
-                </LinearLayout>
-
-                <!-- Small Circle Radius Field (Local Only - Not Sent to Server) -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="14dp"
-                        android:text="SMALL CIRCLE RADIUS (8 waypoints)"
-                        android:textSize="12sp"
-                        android:textStyle="italic"/>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="38dp"
-                        android:layout_marginTop="5dp"
-                        android:orientation="horizontal"
-                        android:weightSum="10">
-
-                        <ImageButton
-                            android:id="@+id/smallCircleMinusBtn"
-                            android:layout_width="0dp"
-                            android:layout_height="match_parent"
-                            android:layout_weight="1"
-                            android:src="@drawable/minus"
-                            android:background="@drawable/transparent_button"
-                            app:tint="@color/text_primary" />
-
-                        <EditText
-                            android:id="@+id/smallCircleRadiusEdt"
-                            android:layout_width="0dp"
-                            android:layout_marginLeft="5dp"
-                            android:layout_marginRight="5dp"
-                            android:layout_weight="8"
-                            android:layout_height="38dp"
-                            android:background="@drawable/edit_text_border"
-                            android:hint="10"
-                            android:textSize="14sp"
-                            android:paddingLeft="10dp"
-                            android:paddingRight="10dp"
-                            android:textColor="@color/text_primary"
-                            android:textColorHint="@color/text_primary"
-                            android:inputType="number"
-                            android:drawableEnd="@drawable/feet_icon"
-                            android:drawablePadding="6dp"
-                            android:drawableTint="@color/text_primary" />
-
-                        <ImageButton
-                            android:id="@+id/smallCirclePlusBtn"
-                            android:layout_width="0dp"
-                            android:layout_height="match_parent"
-                            android:layout_weight="1"
-                            android:src="@drawable/plus"
-                            android:background="@drawable/transparent_button"
-                            app:tint="@color/text_primary" />
-
-                    </LinearLayout>
                 </LinearLayout>
 
             </LinearLayout>

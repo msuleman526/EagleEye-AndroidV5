@@ -1,11 +1,11 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace 'com.empowerbits.dronifyit'
+    namespace 'io.empowerbits.sightflight'
     compileSdkVersion Integer.parseInt(project.ANDROID_COMPILE_SDK_VERSION)
 
     defaultConfig {
-        applicationId "com.empowerbits.dronifyit"
+        applicationId "io.empowerbits.sightflight"
         minSdkVersion Integer.parseInt(project.ANDROID_MIN_SDK_VERSION)
         targetSdkVersion Integer.parseInt(project.ANDROID_TARGET_SDK_VERSION)
         versionCode 2

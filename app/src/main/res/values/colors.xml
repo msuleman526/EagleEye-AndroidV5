@@ -170,33 +170,33 @@
     <color name="secondary_color">#888888</color>
     <color name="secondary_dark_color">#888888</color>
 
-    <color name="border_color">#BFBFBF</color>
-    <color name="button_color">#FFFFFF</color>
+    <color name="border_color">#212121</color>
+    <color name="button_color">#005AC405</color>
 
-    <color name="field_border">#525252</color>
+    <color name="field_border">#A4A4A4</color>
     <color name="main_color">#0070D8</color>
 
-    <color name="text_primary">#515151</color>
-    <color name="text_app_secondary">#515151</color>
-    <color name="background_color">#F4F3F3</color>
+    <color name="text_primary">#DBDBDC</color>
+    <color name="text_app_secondary">#DBDBDC</color>
+    <color name="background_color">#141416</color>
 
-    <color name="background_main">#ffffff</color>
+    <color name="background_main">#D90D0D0F</color>
 
-    <color name="gray_text_field_background">#FFFFFF</color>
-    <color name="gray_text_field_border">#BFBFBF</color>
+    <color name="gray_text_field_background">#333333</color>
+    <color name="gray_text_field_border">#40CFCFCF</color>
 
-    <color name="dark_button">#D9FFFFFF</color>
+    <color name="dark_button">#D9000000</color>
 <!--    New Colors-->
-    <color name="background1">#FFFFFF</color>
-    <color name="background2">#D2D2D2</color>
-    <color name="secondary_background1">#FFFFFF</color>
-    <color name="secondary_background2">#EFEFEF</color>
-    <color name="textfield_background">#FFFFFF</color>
-    <color name="textfield_border">#E1E1E1</color>
+    <color name="background1">#262626</color>
+    <color name="background2">#1F1E23</color>
+    <color name="secondary_background1">#262626</color>
+    <color name="secondary_background2">#1F1E23</color>
+    <color name="textfield_background">#1D1D1D</color>
+    <color name="textfield_border">#505050</color>
     <color name="gray_text">#A4A4A4</color>
     <color name="primary1">#1DA0FF</color>
     <color name="primary2">#0084FF</color>
-    <color name="secondary1">#1DA0FF</color>
-    <color name="secondary2">#0084FF</color>
-    <color name="header">#FFFFFF</color>
+    <color name="secondary1">#454545</color>
+    <color name="secondary2">#393939</color>
+    <color name="header">#2A2A2E</color>
 </resources>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/telemetryContainer"
     android:layout_width="wrap_content"
     android:background="@color/transparent"
@@ -17,9 +18,9 @@
         <ImageView
             android:id="@+id/batteryIcon"
             android:layout_width="11dp"
-            android:tint="@color/text_primary"
+             app:tint="@color/text_primary"
             android:layout_height="20dp"
-            android:src="@drawable/bettery_empty"/>
+            android:src="@drawable/bettery_empty" />
 
         <TextView
             android:id="@+id/batteryText"
@@ -28,38 +29,13 @@
             android:textSize="14sp"
             android:layout_marginLeft="2dp"
             android:textColor="@color/text_primary"
-            android:text="N/A"/>
-
-    </LinearLayout>
-
-    <!-- Flight Mode Section -->
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:gravity="center"
-        android:layout_height="match_parent">
-
-        <ImageView
-            android:id="@+id/droneIcon"
-            android:layout_width="20dp"
-            android:tint="@color/text_primary"
-            android:layout_height="20dp"
-            android:src="@drawable/drone"/>
-
-        <TextView
-            android:id="@+id/flightModeText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="14sp"
-            android:layout_marginLeft="2dp"
-            android:textColor="@color/text_primary"
-            android:text="N/A"/>
+            android:text="N/A" />
 
     </LinearLayout>
 
     <!-- GPS/Satellite Section -->
     <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_marginLeft="5dp"
         android:gravity="center"
         android:layout_height="match_parent"
         android:orientation="horizontal">
@@ -68,8 +44,8 @@
             android:id="@+id/satelliteIcon"
             android:layout_width="25dp"
             android:layout_height="25dp"
-            android:tint="@color/text_primary"
-            android:src="@drawable/settlite_0"/>
+             app:tint="@color/text_primary"
+            android:src="@drawable/settlite_0" />
 
         <TextView
             android:id="@+id/satelliteCountText"
@@ -80,15 +56,15 @@
             android:layout_marginLeft="-2dp"
             android:gravity="top"
             android:textColor="@color/text_primary"
-            android:text="0"/>
+            android:text="0" />
 
         <ImageView
             android:id="@+id/gpsSignalIcon"
             android:layout_width="25dp"
-            android:tint="@color/text_primary"
+             app:tint="@color/text_primary"
             android:layout_height="20dp"
             android:layout_marginLeft="-7dp"
-            android:src="@drawable/signal_0"/>
+            android:src="@drawable/signal_0" />
 
     </LinearLayout>
 
@@ -104,8 +80,8 @@
             android:id="@+id/remoteIcon"
             android:layout_width="25dp"
             android:layout_height="25dp"
-            android:tint="@color/text_primary"
-            android:src="@drawable/remote_0"/>
+             app:tint="@color/text_primary"
+            android:src="@drawable/remote_0" />
 
         <TextView
             android:id="@+id/remoteSignalText"
@@ -116,15 +92,39 @@
             android:layout_marginLeft="-2dp"
             android:gravity="top"
             android:textColor="@color/text_primary"
-            android:text="0"/>
+            android:text="0" />
 
         <ImageView
             android:id="@+id/remoteSignalIcon"
             android:layout_width="25dp"
             android:layout_height="20dp"
             android:layout_marginLeft="-7dp"
-            android:tint="@color/text_primary"
-            android:src="@drawable/signal_0"/>
+             app:tint="@color/text_primary"
+            android:src="@drawable/signal_0" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:gravity="center"
+        android:layout_marginLeft="5dp"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/droneIcon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/drone"
+            app:tint="@color/text_primary" />
+
+        <TextView
+            android:id="@+id/flightModeText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:layout_marginLeft="2dp"
+            android:textColor="@color/text_primary"
+            android:text="N/A"/>
 
     </LinearLayout>
 

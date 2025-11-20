@@ -73,7 +73,7 @@
                 android:layout_width="30dp"
                 android:layout_marginLeft="-5dp"
                 android:checked="true"
-                android:buttonTint="@color/main_color"
+                android:backgroundTint="@color/main_color"
                 android:layout_height="20dp"/>
 
             <TextView
@@ -114,6 +114,7 @@
             android:layout_marginTop="10dp"/>
 
         <TextView
+            android:id="@+id/forgotPasswordBtn"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginTop="10dp"
@@ -127,7 +128,7 @@
             android:layout_marginTop="10dp"
             android:gravity="center"
             android:textSize="14dp"
-            android:text="Don’t have dronifyit account? Learn More"
+            android:text="Don’t have sight flight account? Learn More"
             android:textColor="@color/text_primary"/>
 
 

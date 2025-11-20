@@ -7,14 +7,30 @@
     android:background="@drawable/secondary_gradient_background">
 
     <!-- Full Screen Google Maps -->
-
-    <!-- Info Panel on Right -->
-    <fragment
-        android:id="@+id/mapFragment"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_weight="1">
+
+        <fragment
+            android:id="@+id/mapFragment"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <TextView
+            android:id="@+id/statusTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginLeft="20dp"
+            android:gravity="center"
+            android:layout_marginBottom="5dp"
+            android:layout_alignParentBottom="true"
+            android:padding="5dp"
+            android:background="@drawable/dark_buttons_background"
+            android:text="Place roof inspection markers where the drone can capture clear close-up photos. Avoid placing markers on or near trees."/>
+    </RelativeLayout>
 
     <RelativeLayout
         android:id="@+id/info"
@@ -139,7 +155,7 @@
 
         <Button
             android:id="@+id/continueBtn"
-            android:layout_width="108dp"
+            android:layout_width="117dp"
             android:layout_height="36dp"
             android:layout_alignParentBottom="true"
             android:layout_alignParentRight="true"

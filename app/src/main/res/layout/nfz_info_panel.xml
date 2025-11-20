@@ -1,22 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/nfzInfoPanel"
-    android:layout_width="wrap_content"
+    android:layout_width="280dp"
     android:layout_height="wrap_content"
-    android:layout_alignParentBottom="true"
-    android:layout_alignParentEnd="true"
-    android:layout_alignParentRight="true"
-    android:layout_marginEnd="12dp"
-    android:layout_marginRight="12dp"
-    android:layout_marginBottom="120dp"
     android:background="@drawable/secondary_gradient_curve"
-    android:padding="12dp"
-    android:elevation="8dp"
-    android:visibility="gone">
+    android:padding="16dp"
+    android:elevation="12dp">
+
+    <!-- Close Button (Top Right) -->
+    <ImageView
+        android:id="@+id/btnCloseNFZPanel"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:src="@drawable/close"
+        android:padding="4dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Close" />
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:orientation="vertical">
 
         <!-- NFZ Header -->
@@ -24,49 +31,113 @@
             android:id="@+id/nfzHeaderText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="⚠️ NO-FLY ZONE"
+            android:text="⚠️ NO-FLY ZONE INFO"
             android:textColor="@color/text_primary"
             android:textStyle="bold"
-            android:textSize="12sp"
-            android:layout_marginBottom="8dp" />
+            android:textSize="14sp"
+            android:layout_marginBottom="12dp" />
 
         <!-- NFZ Name -->
-        <TextView
-            android:id="@+id/nfzNameText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Zone Name"
-            android:textColor="@color/text_primary"
-            android:textSize="11sp"
-            android:layout_marginBottom="6dp"
-            android:ellipsize="end"
-            android:maxLines="2" />
-
-        <!-- NFZ Level with Color Indicator -->
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Name: "
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/nfzNameText"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Zone Name"
+                android:textColor="@color/text_primary"
+                android:textSize="11sp"
+                android:ellipsize="end"
+                android:maxLines="2" />
+        </LinearLayout>
+
+        <!-- NFZ Category with Color Indicator -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="6dp">
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Category: "
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
 
             <View
                 android:id="@+id/nfzColorIndicator"
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:layout_marginEnd="8dp"
-                android:background="@drawable/shape_button" />
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginEnd="6dp"
+                android:layout_marginRight="6dp" />
 
             <TextView
                 android:id="@+id/nfzLevelText"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:text="Restriction Level"
                 android:textColor="@color/text_primary"
-                android:textSize="10sp" />
+                android:textSize="11sp" />
         </LinearLayout>
 
-        <!-- NFZ Affected Waypoints -->
+        <!-- Altitude Limit (conditionally shown) -->
+        <LinearLayout
+            android:id="@+id/altitudeLimitContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Altitude Limit: "
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/nfzAltitudeLimit"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="120m"
+                android:textColor="#FFC107"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- NFZ Description (conditionally shown) -->
+        <TextView
+            android:id="@+id/nfzDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Description"
+            android:textColor="@color/text_secondary"
+            android:textSize="10sp"
+            android:lineSpacingExtra="2dp"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone" />
+
+        <!-- NFZ Affected Waypoints (for embedded panel) -->
         <TextView
             android:id="@+id/nfzAffectedWaypoints"
             android:layout_width="wrap_content"
@@ -78,7 +149,7 @@
             android:layout_marginBottom="8dp"
             android:visibility="gone" />
 
-        <!-- Unlock Button -->
+        <!-- Unlock Button (for embedded panel) -->
         <Button
             android:id="@+id/btnUnlockNFZ"
             android:layout_width="match_parent"
@@ -89,7 +160,7 @@
             android:background="@drawable/shape_button"
             android:visibility="gone" />
 
-        <!-- Unlock All Enhanced Warnings Button -->
+        <!-- Unlock All Enhanced Warnings Button (for embedded panel) -->
         <Button
             android:id="@+id/btnUnlockAllEnhancedWarnings"
             android:layout_width="match_parent"
@@ -99,7 +170,8 @@
             android:textColor="@android:color/white"
             android:background="@drawable/primary_button"
             android:layout_marginTop="6dp"
-            android:visibility="visible" />
+            android:visibility="gone" />
+
     </LinearLayout>
 
 </RelativeLayout>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/secondary_gradient_background">
+
+    <!-- Header -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:background="@color/header">
+
+        <ImageView
+            android:id="@+id/backBtn"
+            android:layout_width="40dp"
+            android:layout_height="match_parent"
+            android:src="@drawable/back"
+            android:padding="10dp"
+            android:tint="@color/text_primary"
+            android:layout_centerVertical="true"
+            android:contentDescription="Back"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="Drone Settings"
+            android:textColor="@color/text_primary"
+            android:textSize="16sp"
+            android:layout_alignParentRight="true"
+            android:gravity="center"
+            android:layout_marginRight="10dp"/>
+
+    </RelativeLayout>
+
+    <!-- Tab Layout -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@color/header"
+        app:tabTextColor="@color/text_secondary"
+        app:tabSelectedTextColor="@color/primary1"
+        app:tabIndicatorColor="@color/primary1"
+        app:tabIndicatorHeight="3dp"
+        app:tabMode="scrollable"
+        app:tabGravity="fill"/>
+
+    <!-- ViewPager2 for tab content -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <!-- Fragment Container for sub-screens -->
+    <FrameLayout
+        android:id="@+id/fragmentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"/>
+
+</LinearLayout>

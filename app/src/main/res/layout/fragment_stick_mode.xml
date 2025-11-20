@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/secondary_gradient_background">
+
+    <RadioGroup
+        android:id="@+id/stickModeToggle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <RadioButton
+            android:id="@+id/btnMode1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Mode 1"
+            android:button="@null"
+            android:background="@drawable/selector_segmented_button"
+            android:gravity="center"
+            android:padding="12dp"
+            android:textColor="@color/text_primary"/>
+
+        <RadioButton
+            android:id="@+id/btnMode2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Mode 2"
+            android:button="@null"
+            android:background="@drawable/selector_segmented_button"
+            android:gravity="center"
+            android:padding="12dp"
+            android:textColor="@color/text_primary"
+            android:checked="true"/>
+
+        <RadioButton
+            android:id="@+id/btnMode3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Mode 3"
+            android:button="@null"
+            android:background="@drawable/selector_segmented_button"
+            android:gravity="center"
+            android:padding="12dp"
+            android:textColor="@color/text_primary"/>
+
+    </RadioGroup>
+
+    <!-- Stick Diagram -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:weightSum="2"
+        android:padding="16dp">
+
+        <!-- Left Stick -->
+        <ImageView
+            android:id="@+id/leftStickImage"
+            android:layout_width="0dp"
+            android:layout_height="120dp"
+            android:layout_weight="1"
+            android:src="@drawable/stick_mode2_1"
+            android:scaleType="fitCenter"
+            android:layout_marginEnd="8dp"
+            android:contentDescription="Left Stick"/>
+
+        <!-- Right Stick -->
+        <ImageView
+            android:id="@+id/rightStickImage"
+            android:layout_width="0dp"
+            android:layout_height="120dp"
+            android:layout_weight="1"
+            android:src="@drawable/stick_mode2_2"
+            android:scaleType="fitCenter"
+            android:layout_marginStart="8dp"
+            android:contentDescription="Right Stick"/>
+
+    </LinearLayout>
+
+</LinearLayout>

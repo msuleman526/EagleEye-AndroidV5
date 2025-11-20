@@ -1,0 +1,631 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@drawable/secondary_gradient_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Flight Mode Selector -->
+        <RadioGroup
+            android:id="@+id/flightModeToggle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="24dp">
+
+            <RadioButton
+                android:id="@+id/btnCine"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Cine"
+                android:button="@null"
+                android:background="@drawable/selector_segmented_button"
+                android:gravity="center"
+                android:padding="12dp"
+                android:textColor="@color/text_primary"/>
+
+            <RadioButton
+                android:id="@+id/btnNormal"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Normal"
+                android:button="@null"
+                android:background="@drawable/selector_segmented_button"
+                android:gravity="center"
+                android:padding="12dp"
+                android:textColor="@color/text_primary"
+                android:checked="true"/>
+
+            <RadioButton
+                android:id="@+id/btnSport"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Sport"
+                android:button="@null"
+                android:background="@drawable/selector_segmented_button"
+                android:gravity="center"
+                android:padding="12dp"
+                android:textColor="@color/text_primary"/>
+
+        </RadioGroup>
+
+        <!-- Expo Graph Illustration -->
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/big_drone_green"
+            android:layout_marginBottom="16dp"
+            android:contentDescription="Expo Graph"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Expo"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="When the stick is pushed, the X-axis shows the output on the control stick while the Y-axis shows the actual output on the aircraft. The range extends from 0.1 to 0.9"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Up/Down Expo Slider -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:text="Up/Down"
+                android:textColor="@color/uxsdk_red"
+                android:textSize="14sp"/>
+
+            <TextView
+                android:id="@+id/upDownExpoValue"
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:text="0.3"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:gravity="end"/>
+
+            <SeekBar
+                android:id="@+id/upDownExpoSlider"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="80"
+                android:progress="20"/>
+
+        </LinearLayout>
+
+        <!-- Yaw Expo Slider -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:text="Yaw"
+                android:textColor="@color/uxsdk_blue"
+                android:textSize="14sp"/>
+
+            <TextView
+                android:id="@+id/yawExpoValue"
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:text="0.2"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:gravity="end"/>
+
+            <SeekBar
+                android:id="@+id/yawExpoSlider"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="80"
+                android:progress="10"/>
+
+        </LinearLayout>
+
+        <!-- Pitch/Roll Expo Slider -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="24dp">
+
+            <TextView
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:text="Pitch/Roll"
+                android:textColor="@color/uxsdk_green"
+                android:textSize="14sp"/>
+
+            <TextView
+                android:id="@+id/pitchRollExpoValue"
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:text="0.25"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:gravity="end"/>
+
+            <SeekBar
+                android:id="@+id/pitchRollExpoSlider"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="80"
+                android:progress="15"/>
+
+        </LinearLayout>
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/textfield_border"
+            android:layout_marginVertical="8dp"/>
+
+        <!-- Gimbal Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Gimbal"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- Max Control Speed (Tilt) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Max Control Speed (Tilt)"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"/>
+
+                <TextView
+                    android:id="@+id/gimbalMaxSpeedValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="15°/s"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="A higher value indicates a faster gimbal tilt rotation speed when rotating the gimbal dial. The range extends from 1.0 to 100.0"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="8dp"/>
+
+            <SeekBar
+                android:id="@+id/gimbalMaxSpeedSlider"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="99"
+                android:progress="14"/>
+
+        </LinearLayout>
+
+        <!-- Tilt Smoothness -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="24dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Tilt Smoothness"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"/>
+
+                <TextView
+                    android:id="@+id/gimbalSmoothnessValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="8"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="A higher value indicates a smoother tilt rotation of the gimbal when rotating the gimbal dial. The range extends from 0.0 to 30.0"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="8dp"/>
+
+            <SeekBar
+                android:id="@+id/gimbalSmoothnessSlider"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="30"
+                android:progress="8"/>
+
+        </LinearLayout>
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/textfield_border"
+            android:layout_marginVertical="8dp"/>
+
+        <!-- Aircraft Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Aircraft"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- Max Horizontal Speed (Virtual Stick Range) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Max Horizontal Speed"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"/>
+
+                <TextView
+                    android:id="@+id/maxHorizontalSpeedValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="12.0m/s"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="A higher value indicates a faster horizontal speed of the aircraft when pushing the pitch/roll stick. The range extends from 1.0 to 23.0"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="8dp"/>
+
+            <SeekBar
+                android:id="@+id/maxHorizontalSpeedSlider"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="220"
+                android:progress="110"/>
+
+        </LinearLayout>
+
+        <!-- Max Ascent Speed -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Max Ascent Speed"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"/>
+
+                <TextView
+                    android:id="@+id/maxAscentSpeedValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="5.0m/s"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="A higher value indicates a faster ascent speed of the aircraft when pushing the throttle stick up. The range extends from 1.0 to 6.0"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="8dp"/>
+
+            <SeekBar
+                android:id="@+id/maxAscentSpeedSlider"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="50"
+                android:progress="40"/>
+
+        </LinearLayout>
+
+        <!-- Max Descent Speed -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Max Descent Speed"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"/>
+
+                <TextView
+                    android:id="@+id/maxDescentSpeedValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="5.0m/s"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="A higher value indicates a faster descent speed of the aircraft when pushing the throttle stick down. The range extends from 1.0 to 6.0"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="8dp"/>
+
+            <SeekBar
+                android:id="@+id/maxDescentSpeedSlider"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="50"
+                android:progress="40"/>
+
+        </LinearLayout>
+
+        <!-- Max Angular Velocity -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Max Angular Velocity"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"/>
+
+                <TextView
+                    android:id="@+id/maxAngularVelocityValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="80°/s"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="A higher value indicates a faster angular velocity of the aircraft when pushing the yaw stick left or right. The range extends from 20 to 100"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="8dp"/>
+
+            <SeekBar
+                android:id="@+id/maxAngularVelocitySlider"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="80"
+                android:progress="60"/>
+
+        </LinearLayout>
+
+        <!-- Yaw Smoothness -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Yaw Smoothness"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"/>
+
+                <TextView
+                    android:id="@+id/yawSmoothnessValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="12"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="A higher value indicates a smoother yaw rotation of the aircraft when pushing the yaw stick left or right. The range extends from 1 to 100"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="8dp"/>
+
+            <SeekBar
+                android:id="@+id/yawSmoothnessSlider"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="99"
+                android:progress="11"/>
+
+        </LinearLayout>
+
+        <!-- Brake Sensitivity -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="24dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Brake Sensitivity"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"/>
+
+                <TextView
+                    android:id="@+id/brakeSensitivityValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="100"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="A higher value indicates a shorter braking distance of the aircraft after releasing the pitch stick. The range extends from 10 to 150"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="8dp"/>
+
+            <SeekBar
+                android:id="@+id/brakeSensitivitySlider"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="140"
+                android:progress="90"/>
+
+        </LinearLayout>
+
+        <!-- Reset Button -->
+        <TextView
+            android:id="@+id/resetSettingsBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Reset Current Settings"
+            android:textColor="@color/uxsdk_blue"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:paddingVertical="12dp"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground"
+            android:layout_marginBottom="24dp"/>
+
+    </LinearLayout>
+
+</ScrollView>

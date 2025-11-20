@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/secondary_gradient_background">
+
+    <!-- Content -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Signal Lost -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Signal Lost"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
+
+            <RadioGroup
+                android:id="@+id/signalLostToggle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="4dp">
+
+                <RadioButton
+                    android:id="@+id/btnRth"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="RTH"
+                    android:button="@null"
+                    android:background="@drawable/selector_segmented_button"
+                    android:gravity="center"
+                    android:padding="12dp"
+                    android:textColor="@color/text_primary"
+                    android:checked="true"/>
+
+                <RadioButton
+                    android:id="@+id/btnDescend"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Descend"
+                    android:button="@null"
+                    android:background="@drawable/selector_segmented_button"
+                    android:gravity="center"
+                    android:padding="12dp"
+                    android:textColor="@color/text_primary"/>
+
+                <RadioButton
+                    android:id="@+id/btnHover"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Hover"
+                    android:button="@null"
+                    android:background="@drawable/selector_segmented_button"
+                    android:gravity="center"
+                    android:padding="12dp"
+                    android:textColor="@color/text_primary"/>
+
+            </RadioGroup>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Aircraft will perform preset action when being disconnected from remote controller"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layout_marginBottom="24dp"/>
+
+            <!-- Emergency Propeller Stop -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Emergency Propeller Stop"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
+
+            <!-- Dropdown for Emergency Propeller Stop Mode -->
+            <Spinner
+                android:id="@+id/emergencyPropellerDropdown"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/edit_text_border"
+                android:padding="12dp"/>
+
+            <!-- Emergency Propeller Stop Diagram -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="8dp">
+
+                <!-- Left stick diagram -->
+                <ImageView
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:src="@drawable/big_drone_red"
+                    android:layout_marginEnd="32dp"
+                    android:contentDescription="Left Stick"/>
+
+                <!-- Right stick diagram -->
+                <ImageView
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:src="@drawable/big_drone_red"
+                    android:contentDescription="Right Stick"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Move both control sticks towards the bottom inner or outer corners simultaneously to stop the aircraft motor during flight. Use with caution"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layout_marginBottom="24dp"
+                android:gravity="center"/>
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/textfield_border"
+                android:layout_marginVertical="8dp"/>
+
+            <!-- Vision Positioning and Obstacle Sensing -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="4dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Vision Positioning and Obstacle Sensing"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/visionPositioningSwitch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="When disabled, aircraft relies only on GNSS to hover, omnidirectional obstacle sensing is unavailable, and aircraft will not automatically decelerate during descent close to ground"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layout_marginBottom="16dp"/>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>

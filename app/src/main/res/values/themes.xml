@@ -1,9 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <style name="Theme.EagleEyeAndroid" parent="Theme.AppCompat.DayNight.NoActionBar">
+    <style name="Theme.EagleEyeAndroid" parent="Theme.Material3.Dark.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+
+        <!-- Material3 Color Scheme for Dark Theme -->
+        <item name="colorPrimary">@color/primary1</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/primary2</item>
+        <item name="colorOnPrimaryContainer">@color/white</item>
+
+        <item name="colorSecondary">@color/secondary1</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorSecondaryContainer">@color/secondary2</item>
+        <item name="colorOnSecondaryContainer">@color/white</item>
+
+        <item name="colorSurface">@color/background1</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorSurfaceVariant">@color/background2</item>
+        <item name="colorOnSurfaceVariant">@color/text_primary</item>
+
+        <item name="android:colorBackground">@color/background_color</item>
+        <item name="colorOnBackground">@color/text_primary</item>
+
+        <!-- Button colors -->
+        <item name="materialButtonStyle">@style/Widget.App.Button</item>
+    </style>
+
+    <!-- Custom Button Style -->
+    <style name="Widget.App.Button" parent="Widget.Material3.Button">
+        <item name="backgroundTint">@null</item> <!-- Disable tint to allow custom backgrounds -->
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <!-- Style for buttons with custom drawable backgrounds -->
+    <style name="Widget.App.Button.Custom" parent="Widget.Material3.Button">
+        <item name="backgroundTint">@null</item>
+        <item name="android:textColor">@color/white</item>
     </style>
 </resources>

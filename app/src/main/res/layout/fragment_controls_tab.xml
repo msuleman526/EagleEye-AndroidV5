@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@drawable/secondary_gradient_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Gimbal Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Gimbal"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- Gimbal Mode -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Gimbal Mode"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="The gimbal remains fixed horizontally when the aircraft is moving."
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layout_marginBottom="8dp"/>
+
+            <RadioGroup
+                android:id="@+id/gimbalModeToggle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/btnFollowMode"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Follow Mode"
+                    android:button="@null"
+                    android:background="@drawable/selector_segmented_button"
+                    android:gravity="center"
+                    android:padding="12dp"
+                    android:textColor="@color/text_primary"
+                    android:checked="true"/>
+
+                <RadioButton
+                    android:id="@+id/btnFpvMode"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="FPV Mode"
+                    android:button="@null"
+                    android:background="@drawable/selector_segmented_button"
+                    android:gravity="center"
+                    android:padding="12dp"
+                    android:textColor="@color/text_primary"/>
+
+            </RadioGroup>
+
+        </LinearLayout>
+
+        <!-- Gimbal Calibration -->
+        <LinearLayout
+            android:id="@+id/gimbalCalibrationItem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingVertical="12dp"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Gimbal Calibration"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold"/>
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_arrow_forward"
+                android:tint="@color/text_secondary"/>
+
+        </LinearLayout>
+
+        <!-- Recenter Gimbal -->
+        <TextView
+            android:id="@+id/recenterGimbalBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Recenter Gimbal"
+            android:textColor="@color/uxsdk_blue"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:paddingVertical="12dp"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/textfield_border"
+            android:layout_marginVertical="8dp"/>
+
+        <!-- Remote Controller Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Remote Controller"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- Stick Mode -->
+        <LinearLayout
+            android:id="@+id/stickModeItem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingVertical="12dp"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground"
+            android:layout_marginBottom="24dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Stick Mode"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/stickModeValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mode 2"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp"
+                android:layout_marginEnd="8dp"/>
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_arrow_forward"
+                android:tint="@color/text_secondary"/>
+
+        </LinearLayout>
+
+        <!-- Bottom Spacer -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="24dp"/>
+
+        <!-- Re-pair to Aircraft Button -->
+        <Button
+            android:id="@+id/repairAircraftBtn"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="Re-pair to Aircraft (Link)"
+            android:textSize="16sp"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/uxsdk_blue"
+            android:layout_marginTop="16dp"/>
+
+    </LinearLayout>
+
+</ScrollView>

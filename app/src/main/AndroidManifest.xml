@@ -39,7 +39,7 @@
         android:required="true" />
 
     <application
-        android:name=".EagleEyeApplication"
+        android:name="io.empowerbits.sightflight.EagleEyeApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -52,7 +52,7 @@
         <!-- DJI API Key -->
         <meta-data
             android:name="com.dji.sdk.API_KEY"
-            android:value="e027406add0f1deaa8ed5a6f" />
+            android:value="7a0f03fbfdb6bde4013f35da" />
 
         <!-- Google Maps API Key -->
         <meta-data
@@ -60,7 +60,7 @@
             android:value="AIzaSyAo1viD-Ut0TzXTyihevwuf-9tv_J3dPa0" />
 
         <activity
-            android:name=".Activities.SplashActivity"
+            android:name="io.empowerbits.sightflight.Activities.SplashActivity"
             android:exported="true"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden">
             <intent-filter>
@@ -71,7 +71,7 @@
 
         <!-- Main Activity -->
         <activity
-            android:name=".Activities.MainActivity"
+            android:name="io.empowerbits.sightflight.Activities.MainActivity"
             android:exported="true"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden">
             <intent-filter>
@@ -84,59 +84,64 @@
 
         <!-- Waypoint Activity -->
         <activity
-            android:name=".Activities.WaypointActivity"
+            android:name="io.empowerbits.sightflight.Activities.WaypointActivity"
             android:exported="false"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:theme="@style/Theme.EagleEyeAndroid" />
 
         <!-- Waypoint Activity -->
         <activity
-            android:name=".Activities.AddProject.ProjectInfoActivity"
+            android:name="io.empowerbits.sightflight.Activities.AddProject.ProjectInfoActivity"
             android:exported="false"
             android:theme="@style/Theme.EagleEyeAndroid" />
 
         <!-- Waypoint Activity -->
         <activity
-            android:name=".Activities.LoginActivity"
+            android:name="io.empowerbits.sightflight.Activities.LoginActivity"
             android:exported="false"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:theme="@style/Theme.EagleEyeAndroid" />
 
         <activity
-            android:name=".Activities.AddProject.ProjectWaypointActivity"
+            android:name="io.empowerbits.sightflight.Activities.AddProject.ProjectWaypointActivity"
             android:exported="false"
             android:theme="@style/Theme.EagleEyeAndroid" />
 
         <activity
-            android:name=".Activities.FPVCameraActivity"
+            android:name="io.empowerbits.sightflight.Activities.FPVCameraActivity"
             android:exported="false"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:theme="@style/Theme.EagleEyeAndroid" />
 
         <activity
-            android:name=".Activities.MediaManagerActivity"
+            android:name="io.empowerbits.sightflight.Activities.MediaManagerActivity"
             android:exported="false"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:theme="@style/Theme.EagleEyeAndroid" />
 
         <!-- Media Viewer Activity -->
         <activity
-            android:name=".Activities.MediaViewerActivity"
+            android:name="io.empowerbits.sightflight.Activities.MediaViewerActivity"
             android:exported="false"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
 
         <!-- Services -->
         <service
-            android:name=".Services.CommandService_V5SDK"
+            android:name="io.empowerbits.sightflight.Services.CommandService_V5SDK"
             android:enabled="true"
             android:exported="false" />
 
         <service
-            android:name=".Services.TelemetryService"
+            android:name="io.empowerbits.sightflight.Services.TelemetryService"
             android:enabled="true"
             android:exported="false"
             tools:ignore="Instantiatable" />
+
+        <service
+            android:name="io.empowerbits.sightflight.Services.ButtonsListenerService"
+            android:enabled="true"
+            android:exported="false" />
 
     </application>
 

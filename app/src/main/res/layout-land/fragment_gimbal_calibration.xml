@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_black">
+
+    <!-- Close Button -->
+    <ImageView
+        android:id="@+id/closeBtn"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_margin="16dp"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        android:tint="@color/white"
+        android:padding="8dp"
+        android:contentDescription="Close"/>
+
+    <!-- Title -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Gimbal Calibration"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="16dp"/>
+
+    <!-- Main Content - Horizontal Layout for Landscape -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="24dp"
+        android:layout_marginTop="56dp">
+
+        <!-- Left Side - Drone Illustration -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_marginEnd="24dp">
+
+            <ImageView
+                android:id="@+id/droneIllustration"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:src="@drawable/big_drone_green"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:contentDescription="Drone"/>
+
+        </LinearLayout>
+
+        <!-- Right Side - Instructions and Controls -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center_vertical">
+
+            <!-- Instructions -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="• Place aircraft on a level surface."
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:layout_marginBottom="24dp"/>
+
+            <!-- Mode Selection -->
+            <RadioGroup
+                android:id="@+id/calibrationModeToggle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="24dp">
+
+                <RadioButton
+                    android:id="@+id/btnAuto"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="AUTO"
+                    android:button="@null"
+                    android:background="@drawable/selector_segmented_button"
+                    android:gravity="center"
+                    android:padding="12dp"
+                    android:textColor="@color/text_primary"
+                    android:checked="true"/>
+
+                <RadioButton
+                    android:id="@+id/btnManual"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Manual"
+                    android:button="@null"
+                    android:background="@drawable/selector_segmented_button"
+                    android:gravity="center"
+                    android:padding="12dp"
+                    android:textColor="@color/text_primary"/>
+
+            </RadioGroup>
+
+            <!-- Start Button -->
+            <Button
+                android:id="@+id/startCalibrationBtn"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:text="START"
+                android:textSize="18sp"
+                android:backgroundTint="@color/white"
+                android:textColor="@color/black"/>
+
+            <!-- Status Text -->
+            <TextView
+                android:id="@+id/calibrationStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textColor="@color/uxsdk_yellow"
+                android:textSize="14sp"
+                android:gravity="center"
+                android:layout_marginTop="16dp"
+                android:visibility="gone"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

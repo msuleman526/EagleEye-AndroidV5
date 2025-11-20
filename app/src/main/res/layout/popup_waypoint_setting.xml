@@ -1,0 +1,222 @@
+<!-- res/layout/popup_waypoint_setting.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:background="@drawable/secondary_gradient_background">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Waypoint Setting"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:textSize="16dp"
+        android:padding="12dp"
+        android:textColor="@color/text_primary"/>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="10dp"
+            android:padding="12dp">
+
+            <!-- Waypoint Name -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_primary"
+                    android:text="Waypoint Name"
+                    android:textStyle="bold"/>
+
+                <EditText
+                    android:id="@+id/waypointNameEdit"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="5dp"
+                    android:background="@drawable/edit_text_border"
+                    android:hint="Enter waypoint name"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/gray_text"/>
+
+            </LinearLayout>
+
+            <!-- Latitude (Read-only) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_primary"
+                    android:text="Latitude"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:id="@+id/latitudeText"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="5dp"
+                    android:background="@drawable/edit_text_border"
+                    android:gravity="center_vertical"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:text="0.0"
+                    android:textColor="@color/text_primary"/>
+
+            </LinearLayout>
+
+            <!-- Longitude (Read-only) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_primary"
+                    android:text="Longitude"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:id="@+id/longitudeText"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="5dp"
+                    android:background="@drawable/edit_text_border"
+                    android:gravity="center_vertical"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:text="0.0"
+                    android:textColor="@color/text_primary"/>
+
+            </LinearLayout>
+
+            <!-- Altitude SeekBar (1-50 meters) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/altitudeLbl"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_primary"
+                    android:text="Altitude: 10.0 m"
+                    android:textStyle="bold"/>
+
+                <SeekBar
+                    android:id="@+id/altitudeSlider"
+                    android:layout_marginTop="5dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="490"
+                    android:progress="90"/>
+
+            </LinearLayout>
+
+            <!-- Waypoint Speed SeekBar (1-15 m/s) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/waypointSpeedLbl"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_primary"
+                    android:text="Waypoint Speed: 5.0 m/s"
+                    android:textStyle="bold"/>
+
+                <SeekBar
+                    android:id="@+id/waypointSpeedSlider"
+                    android:layout_marginTop="5dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="140"
+                    android:progress="40"/>
+
+            </LinearLayout>
+
+            <!-- Gimbal Pitch Angle SeekBar (-90 to 0 degrees) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/gimbalPitchAngleLbl"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_primary"
+                    android:text="Gimbal Pitch Angle: 1.0°"
+                    android:textStyle="bold"/>
+
+                <SeekBar
+                    android:id="@+id/gimbalPitchAngleSlider"
+                    android:layout_marginTop="5dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="90"
+                    android:progress="89"/>
+
+            </LinearLayout>
+
+            <!-- Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:weightSum="10"
+                android:layout_marginTop="20dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/closeBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginRight="4dp"
+                    android:layout_weight="5"
+                    android:background="@drawable/edit_text_border"
+                    android:text="Close"
+                    android:textColor="@color/text_primary" />
+
+                <Button
+                    android:id="@+id/saveBtn"
+                    android:layout_width="0dp"
+                    android:layout_weight="5"
+                    android:background="@drawable/primary_button"
+                    android:layout_height="match_parent"
+                    android:text="Save"
+                    android:textColor="@color/white"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>

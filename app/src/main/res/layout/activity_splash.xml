@@ -3,6 +3,16 @@
     android:layout_width="match_parent"
     android:background="@drawable/gradient_background"
     android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/background_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="20dp"
+        android:alpha="0.6"
+        android:scaleType="centerCrop"
+        android:src="@drawable/backgorund_image"
+        android:contentDescription="Background" />
     
     <ImageView
         android:layout_width="240dp"
