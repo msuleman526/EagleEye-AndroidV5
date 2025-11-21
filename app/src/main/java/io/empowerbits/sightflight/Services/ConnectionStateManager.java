@@ -30,12 +30,19 @@ public class ConnectionStateManager {
 
     // Called from MainActivity to update connection state
     public void updateConnectionState(boolean connected, ProductType type, String name) {
-        Log.d(TAG, String.format("📡 Connection state updated - Connected: %s, Type: %s, Name: %s",
-                connected, type != null ? type.name() : "null", name));
+        Log.d(TAG, "═══════════════════════════════════════════════════════════");
+        Log.d(TAG, "📡 ConnectionStateManager.updateConnectionState() called");
+        Log.d(TAG, "   Connected: " + connected);
+        Log.d(TAG, "   Type: " + (type != null ? type.name() : "null"));
+        Log.d(TAG, "   Name: " + name);
+        Log.d(TAG, "   Current observers: " + isConnected.hasObservers());
+        Log.d(TAG, "═══════════════════════════════════════════════════════════");
 
         isConnected.postValue(connected);
         productType.postValue(type);
         droneName.postValue(name);
+
+        Log.d(TAG, "✓ LiveData values posted - observers will be notified");
     }
 
     // Getters for LiveData (observe from any Activity/Fragment)

@@ -251,19 +251,20 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
 
         updateConnection(ConnectionStateManager.getInstance().isCurrentlyConnected());
         ConnectionStateManager.getInstance().getConnectionState().observe(this, isConnected -> {
-            Log.d(TAG, "🔗 Connection state changed: " + isConnected);
             updateConnection(isConnected);
         });
     }
 
     void updateConnection(boolean isConnected){
-        if(isConnected){
-            startMissionButton.setImageDrawable(getDrawable(R.drawable.go));
-            connectionBar.setImageDrawable(getDrawable(R.drawable.connected_bar));
-        }else{
-            connectionBar.setImageDrawable(getDrawable(R.drawable.disconnected_bar));
-            startMissionButton.setImageDrawable(getDrawable(R.drawable.go_red));
-        }
+        runOnUiThread(() -> {
+            if(isConnected){
+                startMissionButton.setImageDrawable(getDrawable(R.drawable.go));
+                connectionBar.setImageDrawable(getDrawable(R.drawable.connected_bar));
+            }else{
+                connectionBar.setImageDrawable(getDrawable(R.drawable.disconnected_bar));
+                startMissionButton.setImageDrawable(getDrawable(R.drawable.go_red));
+            }
+        });
     }
 
     private void initializeDisplayManagers() {
@@ -3015,6 +3016,8 @@ public class WaypointActivity extends AppCompatActivity implements OnMapReadyCal
                 btnUnlock.setText("Not Unlockable");
                 btnUnlock.setVisibility(View.GONE);
             }
+
+            btnUnlock.setVisibility(View.GONE);
 
             if (showContinue) {
                 btnContinue.setVisibility(View.VISIBLE);

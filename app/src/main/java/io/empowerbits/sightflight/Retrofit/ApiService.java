@@ -2,6 +2,7 @@ package io.empowerbits.sightflight.Retrofit;
 
 import io.empowerbits.sightflight.ApiResponse.AddProjectResponse;
 import io.empowerbits.sightflight.ApiResponse.FlightLogResponse;
+import io.empowerbits.sightflight.ApiResponse.ForgotPasswordResponse;
 import io.empowerbits.sightflight.ApiResponse.LoginResponse;
 import io.empowerbits.sightflight.ApiResponse.ProjectsResponse;
 
@@ -24,6 +25,10 @@ public interface ApiService {
     @FormUrlEncoded
     @POST("auth/login")
     Call<LoginResponse> login(@Field("email") String email, @Field("password") String password);
+
+    @FormUrlEncoded
+    @POST("auth/forget-password")
+    Call<ForgotPasswordResponse> forgotPassword(@Field("email") String email);
 
     @FormUrlEncoded
     @POST("projects")
