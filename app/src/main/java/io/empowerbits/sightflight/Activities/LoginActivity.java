@@ -8,6 +8,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -29,6 +30,7 @@ public class LoginActivity extends AppCompatActivity {
     LinearLayout loader, checkboxView;
     Button loginBtn;
     CheckBox remCheckbox;
+    TextView forgotPasswordBtn;
 
     UserSessionManager sessionManager;
 
@@ -46,6 +48,7 @@ public class LoginActivity extends AppCompatActivity {
         loginBtn = findViewById(R.id.loginButton);
         checkboxView = findViewById(R.id.checkboxView);
         remCheckbox = findViewById(R.id.remmeberMeCheckbox);
+        forgotPasswordBtn = findViewById(R.id.forgotPasswordBtn);
 
         emailEdt.setText(sessionManager.getFieldEmail());
         passwordEdt.setText(sessionManager.getFieldPassword());
@@ -58,6 +61,10 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         loginBtn.setOnClickListener(view -> loginButtonClick());
+
+        forgotPasswordBtn.setOnClickListener(view -> {
+            startActivity(new Intent(LoginActivity.this, ForgotPasswordActivity.class));
+        });
 
     }
 
