@@ -102,6 +102,13 @@
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:theme="@style/Theme.EagleEyeAndroid" />
 
+        <!-- Forgot Password Activity -->
+        <activity
+            android:name="io.empowerbits.sightflight.Activities.ForgotPasswordActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:theme="@style/Theme.EagleEyeAndroid" />
+
         <activity
             android:name="io.empowerbits.sightflight.Activities.AddProject.ProjectWaypointActivity"
             android:exported="false"

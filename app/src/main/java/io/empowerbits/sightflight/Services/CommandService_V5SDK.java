@@ -133,12 +133,27 @@ public class CommandService_V5SDK extends Service {
             public void onMissionStateUpdate(WaypointMissionExecuteState state) {
                 mainHandler.post(() -> {
                     if (state == null) return;
+
+                    // CRITICAL: Log every state change for debugging
+                    Log.d(TAG, "╔══════════════════════════════════════════════════════╗");
+                    Log.d(TAG, "║ MISSION STATE CHANGED: " + state.name());
+                    Log.d(TAG, "║ missionInProgress: " + missionInProgress);
+                    Log.d(TAG, "╚══════════════════════════════════════════════════════╝");
+
                     String statusMessage = "";
                     String statusType = STATUS_HEADING_TO_WAYPOINT;
-
                     switch (state) {
                         case READY:
-                            statusMessage = "Mission ready";
+                            // CRITICAL: If mission was in progress and suddenly goes to READY, something failed
+                            if (missionInProgress) {
+                                statusMessage = "⚠️ Mission unexpectedly returned to READY state - Check GPS/Simulator";
+                                statusType = STATUS_ERROR;
+                                missionInProgress = false;
+                                Log.e(TAG, "CRITICAL: Mission state changed to READY while mission was in progress!");
+                                stopButtonListenerService();
+                            } else {
+                                statusMessage = "Mission ready";
+                            }
                             break;
                         case UPLOADING:
                             statusMessage = "Uploading mission...";
@@ -248,8 +263,8 @@ public class CommandService_V5SDK extends Service {
             currentKmzFile = generateKmzFileUsingDJISDK();
             saveKmzToExternalStorage();
             verifyKMZFile();
-            enableSimulator(waypointSettings.get(waypointSettings.size()-1).latitude, waypointSettings.get(waypointSettings.size()-1).longitude, 12);
-            //uploadMissionToAircraft();
+            //enableSimulator(waypointSettings.get(waypointSettings.size()-1).latitude, waypointSettings.get(waypointSettings.size()-1).longitude, 12);
+            uploadMissionToAircraft();
 
         } catch (Exception e) {
             Log.e(TAG, "Error starting waypoint mission: " + e.getMessage(), e);
@@ -314,26 +329,37 @@ public class CommandService_V5SDK extends Service {
             WaylineMissionConfigParseInfo info1 = info.getWaylineMissionConfigParseInfo();
             WaylineMissionParseInfo info2 = info.getWaylineMissionParseInfo();
             WaylineWaylinesParseInfo info4 = info.getWaylineWaylinesParseInfo();
-            Log.d(TAG, "Info 1");
+            Log.d(TAG, "Info 1 - Mission Config Parse:");
             Log.d(TAG, info1.toString());
             Log.d(TAG, "----------------------------");
-            Log.d(TAG, "Info 2");
+            Log.d(TAG, "Info 2 - Mission Parse:");
             Log.d(TAG, info2.toString());
             Log.d(TAG, "----------------------------");
-            Log.d(TAG, "Info 3");
+            Log.d(TAG, "Info 3 - Template Parse:");
             Log.d(TAG, info.getWaylineTemplatesParseInfo().getError().toString());
             Log.d(TAG, "----------------------------");
-            Log.d(TAG, "Info 4");
+            Log.d(TAG, "Info 4 - Waylines Parse:");
             Log.d(TAG, info4.toString());
             Log.d(TAG, "----------------------------");
             WaylineCheckErrorMsg check = wpmzManager.checkValidation(kmzPath);
-            Log.d(TAG, "Wayline File Check");
-            // Generic dump
-            Log.d(TAG, "Full object: " + check.toString());
+            Log.d(TAG, "Wayline Validation Check:");
+            Log.d(TAG, "Full validation result: " + check.toString());
 
-             List<WaylineCheckError> errors = check.getValue();
+            List<WaylineCheckError> errors = check.getValue();
+            if (errors != null && !errors.isEmpty()) {
+                Log.e(TAG, "⚠️ KMZ VALIDATION ERRORS FOUND (" + errors.size() + " errors):");
+                for (int i = 0; i < errors.size(); i++) {
+                    WaylineCheckError error = errors.get(i);
+                    Log.e(TAG, "  Error " + (i + 1) + ": " + error.toString());
+                }
+                broadcastStatus(STATUS_ERROR, "KMZ validation failed with " + errors.size() + " error(s). Check logs.", 0, waypointSettings.size());
+            } else {
+                Log.d(TAG, "✓ KMZ validation passed - no errors found");
+                broadcastStatus(STATUS_UPLOADING, "KMZ validation passed", 0, waypointSettings.size());
+            }
         } catch (Throwable t) {
-            Log.e(TAG, "checkValidation threw", t);
+            Log.e(TAG, "KMZ validation check threw exception", t);
+            broadcastStatus(STATUS_ERROR, "KMZ validation exception: " + t.getMessage(), 0, waypointSettings.size());
         }
     }
 
@@ -498,9 +524,12 @@ public class CommandService_V5SDK extends Service {
      * Start the real mission execution on the aircraft
      */
     private void startRealMission() {
+        Log.d(TAG, "════════════════════════════════════════════════════════");
         Log.d(TAG, "Starting REAL waypoint mission execution on aircraft");
+        Log.d(TAG, "════════════════════════════════════════════════════════");
 
         if (currentMissionName.isEmpty()) {
+            Log.e(TAG, "✗ Cannot start mission - currentMissionName is empty");
             broadcastStatus(STATUS_ERROR, "No mission uploaded", 0, waypointSettings.size());
             return;
         }
@@ -508,19 +537,31 @@ public class CommandService_V5SDK extends Service {
         File outputDir = getFilesDir();
         String kmzPath = new File(outputDir, currentMissionName + ".kmz").getAbsolutePath();
         String fileName =  FileUtils.getFileName(kmzPath, ".kmz");
+
+        Log.d(TAG, "Mission details:");
+        Log.d(TAG, "  - Mission name: " + currentMissionName);
+        Log.d(TAG, "  - KMZ path: " + kmzPath);
+        Log.d(TAG, "  - File name: " + fileName);
+        Log.d(TAG, "  - Total waypoints: " + waypointSettings.size());
+        Log.d(TAG, "  - Simulator enabled: " + SimulatorManager.getInstance().isSimulatorEnabled());
+
         waypointMissionManager.startMission(fileName, new CommonCallbacks.CompletionCallback() {
             @Override
             public void onSuccess() {
-                Log.d(TAG, "REAL mission started successfully - Aircraft taking off!");
+                Log.d(TAG, "✓✓✓ MISSION START SUCCESS ✓✓✓");
+                Log.d(TAG, "Aircraft should now be taking off!");
                 mainHandler.post(() -> {
-                    broadcastStatus(STATUS_MISSION_STARTED, "Mission execution started - Aircraft taking off to 90 feet!...", 0, waypointSettings.size());
+                    broadcastStatus(STATUS_MISSION_STARTED, "Mission execution started - Aircraft taking off!", 0, waypointSettings.size());
                     missionInProgress = true;
+                    Log.d(TAG, "missionInProgress flag set to: " + missionInProgress);
                 });
             }
 
             @Override
             public void onFailure(IDJIError error) {
-                Log.e(TAG, "Failed to start REAL mission: " + error.description());
+                Log.e(TAG, "✗✗✗ MISSION START FAILED ✗✗✗");
+                Log.e(TAG, "Error code: " + error.errorCode());
+                Log.e(TAG, "Error description: " + error.description());
                 mainHandler.post(() -> {
                     broadcastStatus(STATUS_ERROR, "Failed to start mission: " + error.description(), 0, waypointSettings.size());
                 });
@@ -559,7 +600,7 @@ public class CommandService_V5SDK extends Service {
                 Log.d(TAG, "Mission stopped successfully");
                 missionInProgress = false;
                 mainHandler.post(() -> {
-                    disableSimulator();
+                    //disableSimulator();
                     broadcastStatus(STATUS_ERROR, "Mission stopped by user", currentWaypointIndex, waypointSettings.size());
                 });
             }
@@ -724,6 +765,18 @@ public class CommandService_V5SDK extends Service {
     private void enableSimulator(double latitude, double longitude, int satelliteCount) {
         Log.d(TAG, "Enabling simulator at location: " + latitude + ", " + longitude + " with " + satelliteCount + " satellites");
 
+        // Ensure satellite count is in valid range (10-20 for stable GPS lock)
+        final int finalSatelliteCount;
+        if (satelliteCount < 10) {
+            Log.w(TAG, "Satellite count too low (" + satelliteCount + "), increasing to 15 for stable GPS");
+            finalSatelliteCount = 15;
+        } else if (satelliteCount > 20) {
+            Log.w(TAG, "Satellite count too high (" + satelliteCount + "), reducing to 20");
+            finalSatelliteCount = 20;
+        } else {
+            finalSatelliteCount = satelliteCount;
+        }
+
         // Check if simulator is already active
         if (SimulatorManager.getInstance().isSimulatorEnabled()) {
             Log.d(TAG, "Simulator already enabled");
@@ -733,19 +786,19 @@ public class CommandService_V5SDK extends Service {
             return;
         }
 
-        showToast("Starting simulator...");
-        broadcastStatus(STATUS_UPLOADING, "Starting simulator...", 0, waypointSettings.size());
+        showToast("Starting simulator with " + finalSatelliteCount + " satellites...");
+        broadcastStatus(STATUS_UPLOADING, "Starting simulator (" + finalSatelliteCount + " satellites)...", 0, waypointSettings.size());
 
         // Enable simulator with location and satellite count
-        InitializationSettings settings = new InitializationSettings(new LocationCoordinate2D(latitude, longitude), satelliteCount);
+        InitializationSettings settings = new InitializationSettings(new LocationCoordinate2D(latitude, longitude), finalSatelliteCount);
         SimulatorManager.getInstance().enableSimulator(settings,
                 new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onSuccess() {
-                        Log.d(TAG, "Simulator enabled successfully");
+                        Log.d(TAG, "✓ Simulator enabled successfully with " + finalSatelliteCount + " satellites");
                         mainHandler.post(() -> {
-                            showToast("Simulator started successfully");
-                            broadcastStatus(STATUS_UPLOADING, "Simulator active - uploading mission...", 0, waypointSettings.size());
+                            showToast("Simulator started - GPS lock stable");
+                            broadcastStatus(STATUS_UPLOADING, "Simulator active (GPS: " + finalSatelliteCount + " sats) - uploading mission...", 0, waypointSettings.size());
                             // Now upload the mission
                             uploadMissionToAircraft();
                         });
@@ -753,7 +806,7 @@ public class CommandService_V5SDK extends Service {
 
                     @Override
                     public void onFailure(IDJIError error) {
-                        Log.e(TAG, "Failed to enable simulator: " + error.description());
+                        Log.e(TAG, "✗ Failed to enable simulator: " + error.description());
                         mainHandler.post(() -> {
                             showToast("Simulator failed: " + error.description());
                             broadcastStatus(STATUS_ERROR, "Simulator failed: " + error.description(), 0, waypointSettings.size());
